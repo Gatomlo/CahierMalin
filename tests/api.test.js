@@ -220,3 +220,35 @@ test('voix : choix par le parent', async () => {
   const me = await (await call('/api/me')).json();
   assert.equal(me.user.voice, 'Puck');
 });
+
+test('reglages admin : cle chiffree, jamais renvoyee, test, voix par defaut', async () => {
+  process.env.GEMINI_BASE_URL = `http://127.0.0.1:${fake.address().port}`;
+  const KEY = 'AIzaSyFAKEFAKEFAKEFAKE1234567890';
+  let s = await (await call('/api/parent/admin/settings')).json();
+  assert.equal(s.keySet, false);
+  assert.equal((await call('/api/parent/admin/settings', { method: 'PUT', body: JSON.stringify({ geminiKey: 'trop court' }) })).status, 400);
+  assert.equal((await call('/api/parent/admin/test-gemini', { method: 'POST', body: '{}' })).status, 400); // pas de cle
+  s = await (await call('/api/parent/admin/settings', { method: 'PUT', body: JSON.stringify({ geminiKey: KEY, voice: 'Aoede', model: 'gemini-test' }) })).json();
+  assert.equal(s.keySet, true);
+  assert.equal(s.keyHint, KEY.slice(-4));
+  assert.equal(JSON.stringify(s).includes(KEY), false); // la cle n'est jamais renvoyee
+  assert.equal(s.model, 'gemini-test');
+  // chiffree dans la base
+  const raw = dbm.db.prepare("SELECT value FROM settings WHERE key = 'gemini_key'").get().value;
+  assert.match(raw, /^v1:/);
+  assert.equal(raw.includes(KEY), false);
+  // config : Gemini disponible sans variable d'environnement
+  assert.equal((await (await call('/api/config')).json()).gemini, true);
+  const ok = await (await call('/api/parent/admin/test-gemini', { method: 'POST', body: '{}' })).json();
+  assert.equal(typeof ok.ok, 'boolean');
+  // un parent non administrateur n'y a pas acces
+  await call('/api/parent/users', { method: 'POST', body: JSON.stringify({ username: 'famille3', password: 'motdepasse3' }) });
+  const login = await fetch(base + '/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: 'famille3', password: 'motdepasse3' }) });
+  const h = { 'content-type': 'application/json', cookie: login.headers.get('set-cookie').split(';')[0] };
+  await fetch(base + '/api/unlock', { method: 'POST', headers: h, body: JSON.stringify({ password: 'motdepasse3' }) });
+  assert.equal((await fetch(base + '/api/parent/admin/settings', { headers: h })).status, 403);
+  // suppression de la cle
+  s = await (await call('/api/parent/admin/settings', { method: 'PUT', body: JSON.stringify({ clearKey: true }) })).json();
+  assert.equal(s.keySet, false);
+  assert.equal((await (await call('/api/config')).json()).gemini, false);
+});

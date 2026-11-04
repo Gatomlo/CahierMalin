@@ -1335,7 +1335,7 @@
         disabled = n === 0;
         meta = n ? (n + ' mot' + (n>1?'s':'') + ' à faire') : (def.id === 'cloze' && !list.words.some(hasSentence) ? "Ajoute des phrases d'exemple" : 'Tout réussi ici !');
       }
-      if(def.id === 'aventure' && !serverCfg.gemini){ disabled = true; meta = 'Demande une clé Gemini sur le serveur'; }
+      if(def.id === 'aventure' && !serverCfg.gemini){ disabled = true; meta = 'Demande une clé Gemini (administrateur)'; }
       var card = el('button',{class:'mode-card', type:'button'});
       if(disabled) card.setAttribute('disabled','true');
       card.innerHTML = '<div class="ic">'+def.icon+'</div><h4>'+escapeHtml(def.title)+'</h4><p>'+escapeHtml(def.desc)+'</p><span class="mode-meta">'+escapeHtml(meta)+'</span>';
@@ -2820,7 +2820,7 @@
       if(profiles.some(function(p){ return p.lists.length; }) && profiles.length > 1) box.appendChild(parentCopy(profiles));
       box.appendChild(parentVoice());
       box.appendChild(parentAccount());
-      if(me.user.isAdmin) box.appendChild(parentUsers());
+      if(me.user.isAdmin){ box.appendChild(parentServer()); box.appendChild(parentUsers()); }
     }).catch(parentErr);
   }
   function parentProfiles(profiles){
@@ -2910,7 +2910,7 @@
   function parentVoice(){
     var card = pcard('Voix de lecture');
     if(!serverCfg.tts){
-      card.appendChild(el('p',{class:'wg-empty'}, 'La voix du serveur demande une clé Gemini : sans elle, la voix de l\'appareil est utilisée.'));
+      card.appendChild(el('p',{class:'wg-empty'}, 'La voix du serveur demande une clé Gemini (réglage de l\'administrateur, plus bas) : sans elle, la voix de l\'appareil est utilisée.'));
       return card;
     }
     var row = el('div',{class:'p-row'});
@@ -2946,6 +2946,56 @@
       });
     }));
     card.appendChild(out);
+    return card;
+  }
+  // Reglages du serveur (administrateur) : plus de variables d'environnement
+  function parentServer(){
+    var card = pcard('Réglages du serveur · Gemini');
+    var body = el('div');
+    card.appendChild(body);
+    function load(){ apiFetch('api/parent/admin/settings').then(draw).catch(parentErr); }
+    function draw(s){
+      body.innerHTML = '';
+      body.appendChild(el('p',{class:'wg-empty'}, s.keySet
+        ? 'Clé enregistrée (…' + escapeHtml(s.keyHint) + ')' + (s.keySource === 'app' ? '' : ' · ' + escapeHtml(s.keySource))
+        : 'Aucune clé : la voix du serveur, la dictée-aventure, les phrases d\'exemple et les déclinaisons complètes sont désactivées.'));
+      var row = el('div',{class:'p-row'});
+      var key = el('input',{type:'password', placeholder:'Coller la clé Gemini', autocomplete:'off', 'aria-label':'Clé Gemini', style:'flex:1;min-width:200px;'});
+      row.appendChild(key);
+      row.appendChild(pbtn('Enregistrer', 'btn-primary', function(){ save({ geminiKey:key.value }, key.value ? 'Clé enregistrée.' : 'Réglages enregistrés.'); }));
+      if(s.keySet) row.appendChild(pbtn('Tester', 'btn-ghost', function(){
+        toast('Test en cours…');
+        apiFetch('api/parent/admin/test-gemini', { method:'POST', body:'{}' }).then(function(r){ toast(r.ok ? 'La clé fonctionne.' : 'Réponse inattendue de Gemini.'); }).catch(parentErr);
+      }));
+      if(s.keySet && s.keySource === 'app') row.appendChild(pbtn('Supprimer la clé', 'btn-danger', function(){
+        if(window.confirm('Supprimer la clé Gemini du serveur ?')) save({ clearKey:true }, 'Clé supprimée.');
+      }));
+      body.appendChild(row);
+      body.appendChild(el('p',{class:'wg-empty'}, 'Une clé gratuite se crée sur aistudio.google.com/apikey. Elle est chiffrée sur le serveur et n\'est jamais renvoyée à l\'écran.'));
+      var det = el('details',{style:'margin-top:8px;'}, '<summary style="cursor:pointer;font-size:.88rem;">Options avancées</summary>');
+      var r2 = el('div',{class:'p-row',style:'margin-top:8px;'}, '<span>Modèle texte</span>');
+      var model = el('input',{type:'text', value:s.model, placeholder:s.defaults.model, 'aria-label':'Modèle texte'});
+      r2.appendChild(model);
+      var r3 = el('div',{class:'p-row',style:'margin-top:6px;'}, '<span>Modèle voix</span>');
+      var tm = el('input',{type:'text', value:s.ttsModel, placeholder:s.defaults.ttsModel, 'aria-label':'Modèle voix'});
+      r3.appendChild(tm);
+      var r4 = el('div',{class:'p-row',style:'margin-top:6px;'}, '<span>Voix par défaut</span>');
+      var voice = el('select',{'aria-label':'Voix par défaut'});
+      s.voices.forEach(function(v){ var o = el('option',{value:v}, escapeHtml(v)); if(v === s.voice) o.selected = true; voice.appendChild(o); });
+      r4.appendChild(voice);
+      var r5 = el('div',{class:'p-row',style:'margin-top:8px;'});
+      r5.appendChild(pbtn('Enregistrer les options', 'btn-ghost', function(){
+        save({ model:model.value.trim() || s.defaults.model, ttsModel:tm.value.trim() || s.defaults.ttsModel, voice:voice.value }, 'Options enregistrées.');
+      }));
+      det.appendChild(r2); det.appendChild(r3); det.appendChild(r4); det.appendChild(r5);
+      body.appendChild(det);
+    }
+    function save(patch, msg){
+      apiFetch('api/parent/admin/settings', { method:'PUT', body: JSON.stringify(patch) }).then(function(s){
+        toast(msg); draw(s); loadConfig();
+      }).catch(parentErr);
+    }
+    load();
     return card;
   }
   function parentUsers(){
