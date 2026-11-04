@@ -21,7 +21,7 @@ Node ≥ 22.5 (`node:sqlite`), Express 4, front en **un seul fichier** `public/i
 - Suivi : le front envoie un journal d'essais (`POST /events`, table `attempts`) ; `GET /parent/profiles/:id/suivi` (14 jours, par jeu, mots à revoir, listes). Export/import JSON de listes, copie entre profils, voix au choix (`users.voice`).
 - PWA : `manifest.json`, `sw.js` (réseau d'abord, jamais l'API), icônes PNG générées. Sons de réussite en Web Audio (réglage « Sons » sur l'accueil).
 
-- **Aucune variable d'environnement à gérer** : `lib/settings.js` (table `settings`) garde clé Gemini (chiffrée AES-256-GCM avec `data/secret.key`, créé seul — à conserver avec `data/`), modèles et voix par défaut ; l'administrateur les règle dans l'espace parent (« Réglages du serveur », bouton Tester). Env et `data/gemini.key` ne servent que de repli (tests, anciennes installations) ; `GEMINI_BASE_URL` = tests.
+- **Aucune variable d'environnement à gérer** : `lib/settings.js` (table `settings`) garde clé Gemini (chiffrée AES-256-GCM avec `data/secret.key`, créé seul — à conserver avec `data/`), modèles et voix par défaut ; l'administrateur les règle dans l'espace parent (« Réglages du serveur », bouton Tester ; `GET /parent/admin/models` liste les modèles texte et voix de la clé, proposés en listes dans les options avancées). Env et `data/gemini.key` ne servent que de repli (tests, anciennes installations) ; `GEMINI_BASE_URL` = tests.
 
 ## Commandes
 - `npm run set-password -- <identifiant> <mot de passe>` : réinitialise un compte parent (ferme ses sessions).

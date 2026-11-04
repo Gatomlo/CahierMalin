@@ -2973,11 +2973,12 @@
       body.appendChild(row);
       body.appendChild(el('p',{class:'wg-empty'}, 'Une clé gratuite se crée sur aistudio.google.com/apikey. Elle est chiffrée sur le serveur et n\'est jamais renvoyée à l\'écran.'));
       var det = el('details',{style:'margin-top:8px;'}, '<summary style="cursor:pointer;font-size:.88rem;">Options avancées</summary>');
+      var dlText = el('datalist',{id:'dlModelText'}), dlTts = el('datalist',{id:'dlModelTts'});
       var r2 = el('div',{class:'p-row',style:'margin-top:8px;'}, '<span>Modèle texte</span>');
-      var model = el('input',{type:'text', value:s.model, placeholder:s.defaults.model, 'aria-label':'Modèle texte'});
+      var model = el('input',{type:'text', value:s.model, placeholder:s.defaults.model, list:'dlModelText', 'aria-label':'Modèle texte'});
       r2.appendChild(model);
       var r3 = el('div',{class:'p-row',style:'margin-top:6px;'}, '<span>Modèle voix</span>');
-      var tm = el('input',{type:'text', value:s.ttsModel, placeholder:s.defaults.ttsModel, 'aria-label':'Modèle voix'});
+      var tm = el('input',{type:'text', value:s.ttsModel, placeholder:s.defaults.ttsModel, list:'dlModelTts', 'aria-label':'Modèle voix'});
       r3.appendChild(tm);
       var r4 = el('div',{class:'p-row',style:'margin-top:6px;'}, '<span>Voix par défaut</span>');
       var voice = el('select',{'aria-label':'Voix par défaut'});
@@ -2987,7 +2988,25 @@
       r5.appendChild(pbtn('Enregistrer les options', 'btn-ghost', function(){
         save({ model:model.value.trim() || s.defaults.model, ttsModel:tm.value.trim() || s.defaults.ttsModel, voice:voice.value }, 'Options enregistrées.');
       }));
-      det.appendChild(r2); det.appendChild(r3); det.appendChild(r4); det.appendChild(r5);
+      var status = el('p',{class:'wg-empty'}, s.keySet ? 'Clique dans un champ pour voir les modèles proposés par Gemini, ou tape un nom.' : 'Enregistre d\'abord une clé pour lister les modèles disponibles.');
+      function fillModels(){
+        if(!s.keySet) return;
+        status.textContent = 'Chargement de la liste…';
+        apiFetch('api/parent/admin/models').then(function(r){
+          dlText.innerHTML = r.text.map(function(m){ return '<option value="' + escapeHtml(m.name) + '">' + escapeHtml(m.label) + '</option>'; }).join('');
+          dlTts.innerHTML = r.tts.map(function(m){ return '<option value="' + escapeHtml(m.name) + '">' + escapeHtml(m.label) + '</option>'; }).join('');
+          status.textContent = r.text.length + ' modèle' + (r.text.length>1?'s':'') + ' texte et ' + r.tts.length + ' modèle' + (r.tts.length>1?'s':'') + ' voix disponibles. Clique dans un champ pour choisir.';
+        }).catch(function(e){ status.textContent = e.message; });
+      }
+      if(s.keySet) r5.appendChild(pbtn('Actualiser la liste', 'btn-ghost', fillModels));
+      det.addEventListener('toggle', function(){ if(det.open && !dlText.children.length) fillModels(); });
+      // Une liste n'affiche que les noms proches de la valeur saisie : on vide le champ a l'entree
+      // (la valeur actuelle revient si rien n'est choisi).
+      [model, tm].forEach(function(inp){
+        inp.addEventListener('focus', function(){ inp.dataset.prev = inp.value; inp.value = ''; });
+        inp.addEventListener('blur', function(){ if(!inp.value.trim()) inp.value = inp.dataset.prev || ''; });
+      });
+      det.appendChild(r2); det.appendChild(r3); det.appendChild(r4); det.appendChild(r5); det.appendChild(status); det.appendChild(dlText); det.appendChild(dlTts);
       body.appendChild(det);
     }
     function save(patch, msg){

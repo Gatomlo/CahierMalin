@@ -22,6 +22,11 @@ test.before(async () => {
     let body = '';
     req.on('data', (c) => { body += c; });
     req.on('end', () => {
+      if (req.method === 'GET' && req.url.includes('/models')) {
+        res.setHeader('content-type', 'application/json');
+        const m = (name, methods = ['generateContent']) => ({ name: 'models/' + name, displayName: name, supportedGenerationMethods: methods });
+        return res.end(JSON.stringify({ models: [m('gemini-2.5-flash'), m('gemini-2.5-pro'), m('gemini-2.5-flash-preview-tts'), m('gemini-2.5-flash-image'), m('text-embedding-004', ['embedContent']), m('gemma-3-27b-it')] }));
+      }
       const prompt = JSON.parse(body).contents[0].parts[0].text;
       res.setHeader('content-type', 'application/json');
       if (req.url.includes('tts')) {
@@ -241,12 +246,17 @@ test('reglages admin : cle chiffree, jamais renvoyee, test, voix par defaut', as
   assert.equal((await (await call('/api/config')).json()).gemini, true);
   const ok = await (await call('/api/parent/admin/test-gemini', { method: 'POST', body: '{}' })).json();
   assert.equal(typeof ok.ok, 'boolean');
+  // liste des modeles : texte et voix separes, embeddings et images ecartes
+  const models = await (await call('/api/parent/admin/models')).json();
+  assert.deepEqual(models.text.map((m) => m.name), ['gemini-2.5-flash', 'gemini-2.5-pro']);
+  assert.deepEqual(models.tts.map((m) => m.name), ['gemini-2.5-flash-preview-tts']);
   // un parent non administrateur n'y a pas acces
   await call('/api/parent/users', { method: 'POST', body: JSON.stringify({ username: 'famille3', password: 'motdepasse3' }) });
   const login = await fetch(base + '/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: 'famille3', password: 'motdepasse3' }) });
   const h = { 'content-type': 'application/json', cookie: login.headers.get('set-cookie').split(';')[0] };
   await fetch(base + '/api/unlock', { method: 'POST', headers: h, body: JSON.stringify({ password: 'motdepasse3' }) });
   assert.equal((await fetch(base + '/api/parent/admin/settings', { headers: h })).status, 403);
+  assert.equal((await fetch(base + '/api/parent/admin/models', { headers: h })).status, 403);
   // suppression de la cle
   s = await (await call('/api/parent/admin/settings', { method: 'PUT', body: JSON.stringify({ clearKey: true }) })).json();
   assert.equal(s.keySet, false);
