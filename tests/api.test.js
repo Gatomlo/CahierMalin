@@ -14,7 +14,7 @@ const dbm = require('../lib/db');
 // Profil libre d'avant les comptes : doit etre repris par le premier compte
 dbm.saveState('lea', { lists: [{ id: 'old', name: 'Ancienne', words: [{ w: 'maison', s: '' }] }], stars: 7 });
 const app = require('../server');
-let base, cookie = '', PID_OLD, PID_NEW, fake, srv, fakeCalls = 0, ttsCalls = 0;
+let flaky = 0, base, cookie = '', PID_OLD, PID_NEW, fake, srv, fakeCalls = 0, ttsCalls = 0;
 
 test.before(async () => {
   fake = http.createServer((req, res) => {
@@ -22,6 +22,8 @@ test.before(async () => {
     let body = '';
     req.on('data', (c) => { body += c; });
     req.on('end', () => {
+      if (req.url.includes('flaky-modele') && ++flaky === 1) { res.statusCode = 503; res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ error: { message: 'This model is currently experiencing high demand.' } })); }
+      if (req.url.includes('toujours-occupe')) { res.statusCode = 503; res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ error: { message: 'high demand' } })); }
       if (req.url.includes('inconnu-modele')) { res.statusCode = 404; res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ error: { message: 'models/inconnu-modele is not found' } })); }
       if (req.headers['x-goog-api-key'] === 'CLEREFUSEE-1234567890123') { res.statusCode = 400; res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ error: { message: 'API key not valid. Please pass a valid API key.' } })); }
       if (req.method === 'GET' && req.url.includes('/models')) {
@@ -275,5 +277,17 @@ test('erreurs Gemini lisibles : cle refusee, modele introuvable, cle avec point 
   assert.match((await test()).error, /refuse la clé : API key not valid/);
   await put({ geminiKey: 'AIzaSyFAKEFAKEFAKEFAKE1234567890', model: 'inconnu-modele' });
   assert.match((await test()).error, /Modèle « inconnu-modele » introuvable/);
+  await put({ model: 'gemini-flash-latest', clearKey: true });
+});
+
+test('Gemini surcharge (503) : nouvel essai automatique puis message clair', async () => {
+  process.env.GEMINI_BASE_URL = `http://127.0.0.1:${fake.address().port}`;
+  const put = (b) => call('/api/parent/admin/settings', { method: 'PUT', body: JSON.stringify(b) });
+  const test = async () => (await call('/api/parent/admin/test-gemini', { method: 'POST', body: '{}' })).json();
+  await put({ geminiKey: 'AIzaSyFAKEFAKEFAKEFAKE1234567890', model: 'flaky-modele' });
+  assert.equal((await test()).error, undefined); // 1er essai 503, le 2e passe (pas d'erreur)
+  assert.equal(flaky >= 2, true);
+  await put({ model: 'toujours-occupe' });
+  assert.match((await test()).error, /surchargé en ce moment/);
   await put({ model: 'gemini-flash-latest', clearKey: true });
 });
