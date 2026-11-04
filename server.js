@@ -5,6 +5,7 @@ const path = require('path');
 const express = require('express');
 const db = require('./lib/db');
 const forms = require('./lib/forms');
+const tts = require('./lib/tts');
 
 if (require.main === module) {
   const fatal = (kind) => (err) => { console.error(`${kind} :`, err); process.exit(1); };
@@ -65,7 +66,7 @@ api.put('/state', profile, (req, res) => {
   res.json({ ok: true });
 });
 
-api.get('/config', (req, res) => res.json({ gemini: forms.hasGemini(), temps: forms.TEMPS }));
+api.get('/config', (req, res) => res.json({ gemini: forms.hasGemini(), tts: forms.hasGemini(), temps: forms.TEMPS, themes: forms.THEMES }));
 
 // Limite simple : l'IA est payante, on borne les appels (global, par minute).
 let window_ = { start: 0, n: 0 };
@@ -87,6 +88,21 @@ api.post('/conjugaison', profile, limit, async (req, res, next) => {
 });
 api.post('/phrases', profile, limit, async (req, res, next) => {
   try { res.json(await forms.phrases((req.body || {}).mots)); } catch (e) { next(e); }
+});
+
+api.post('/aventure', profile, limit, async (req, res, next) => {
+  try { const b = req.body || {}; res.json(await forms.adventure(b.mots, b.anciens, b.chapitres, b.theme)); } catch (e) { next(e); }
+});
+
+// Voix : limite a part (le son est mis en cache, l'essentiel des appels ne coute rien).
+let ttsWindow = { start: 0, n: 0 };
+api.get('/tts', profile, async (req, res, next) => {
+  try {
+    const now = Date.now();
+    if (now - ttsWindow.start > 60000) ttsWindow = { start: now, n: 0 };
+    const file = await tts.audioFor(req.query.text, req.query.slow === '1', () => ++ttsWindow.n > 40);
+    res.set('Cache-Control', 'private, max-age=86400').type('audio/wav').sendFile(file);
+  } catch (e) { next(e); }
 });
 
 api.use((req, res) => res.status(404).json({ error: 'Adresse inconnue.' }));

@@ -520,6 +520,32 @@
   .decl-sub{ font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin:8px 0 2px; }
   .decl-form{ display:flex; align-items:center; gap:8px; font-size:.9rem; padding:2px 0; cursor:pointer; }
   .decl-form em{ color:var(--ink-soft); font-size:.78rem; font-style:normal; }
+  .trail{ display:flex; align-items:center; width:100%; max-width:520px; margin:0 auto 4px; }
+  .trail-node{ width:28px; height:28px; border-radius:50%; border:2.5px solid var(--paper-edge); background:var(--surface); color:var(--ink-soft); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono'; font-weight:600; font-size:.75rem; flex:none; }
+  .trail-node svg{ width:15px; height:15px; }
+  .trail-node.done{ background:var(--green); border-color:var(--green); color:var(--paper); }
+  .trail-node.now{ border-color:var(--gold); color:var(--gold); background:color-mix(in srgb, var(--gold) 16%, var(--surface)); transform:scale(1.18); }
+  .trail-node.goal{ border-color:var(--gold); color:var(--gold); }
+  .trail-node.goal.done{ background:var(--gold); color:var(--paper); }
+  .trail-link{ flex:1; height:0; border-top:3px dotted var(--paper-edge); min-width:6px; }
+  .trail-link.done{ border-top-color:var(--green); border-top-style:solid; }
+  .adv-title{ font-family:'Caveat'; font-weight:700; font-size:2rem; color:var(--ink); line-height:1.1; }
+  .adv-chapter{ font-family:'Baloo 2'; font-weight:600; font-size:1rem; color:var(--gold); }
+  .adv-journal{ width:100%; max-width:520px; text-align:left; background:var(--surface); border:1px dashed var(--paper-edge); border-radius:10px; padding:10px 14px; font-size:.88rem; color:var(--ink-soft); line-height:1.5; }
+  .adv-journal strong{ font-family:'Caveat'; font-size:1.2rem; color:var(--ink); }
+  .adv-text{ width:100%; max-width:520px; font-family:'Karla'; font-size:1.05rem; padding:12px 14px; border-radius:10px; border:2px solid var(--paper-edge); background:var(--surface); color:var(--ink); resize:vertical; min-height:84px; }
+  .adv-text:focus{ outline:none; border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent); }
+  .adv-sentence{ font-size:1.15rem; line-height:1.9; color:var(--ink); max-width:520px; }
+  .adv-sentence .tk-ok{ color:var(--green); }
+  .adv-sentence .tk-bad{ color:var(--red); text-decoration:underline wavy; text-underline-offset:4px; }
+  .adv-wrote{ font-size:.85rem; color:var(--ink-soft); max-width:520px; }
+  .adv-story{ width:100%; max-width:520px; text-align:left; background:var(--surface); border:1px solid var(--paper-edge); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow); }
+  .adv-story h4{ font-family:'Baloo 2'; font-size:.9rem; color:var(--gold); margin:10px 0 2px; }
+  .adv-story h4:first-child{ margin-top:0; }
+  .adv-story p{ margin:0; line-height:1.55; }
+  .adv-setup{ width:100%; max-width:420px; display:flex; flex-direction:column; gap:14px; text-align:left; }
+  .adv-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:.92rem; }
+  .adv-row select{ font-family:'Karla'; font-size:.95rem; padding:8px 10px; border-radius:8px; border:1.5px solid var(--paper-edge); background:var(--surface); color:var(--ink); }
   .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 </style>
 
@@ -694,6 +720,16 @@
     <div class="stage" id="clozeStage"></div>
   </section>
 
+  <!-- DICTEE-AVENTURE -->
+  <section class="page" data-screen="aventure">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="aventureProgressLabel">Prêt</span><div class="track"><span id="aventureProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="aventureStage"></div>
+  </section>
+
   <!-- RESULTS -->
   <section class="page" data-screen="results">
     <div class="page-head" style="text-align:center;">
@@ -793,6 +829,7 @@
   var ICON_MEMORY ='<svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="5.5" width="8" height="11" rx="1.6" stroke="currentColor" stroke-width="1.6"/><rect x="9.5" y="3.5" width="8" height="11" rx="1.6" stroke="currentColor" stroke-width="1.6" fill="var(--surface)"/><path d="M13.5 7.5v3M12 9h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   var ICON_WORDSEARCH = '<svg viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M12.3 12.3 17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 8.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   var ICON_CLOZE = '<svg viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h4M13 10h4M3 14h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 11.5h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  var ICON_ADVENTURE = '<svg viewBox="0 0 20 20" fill="none"><path d="M2.5 16.5 7.5 6l3.5 6 2-3 4.5 7.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 3v4M13 3.5h3l-.8 1.2.8 1.2h-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var ICON_RIBBON = '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 11 6 18l4-2 4 2-1.5-7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 
   /* ---------------- default data ---------------- */
@@ -880,7 +917,7 @@
   /* Chaque liste a son propre score en % et son propre grade : 100 % seulement
      quand chaque mot de la liste est acquis. Un grade atteint n'est jamais perdu,
      même si l'on ajoute des mots à la liste ensuite. */
-  var MODE_IDS = ['flash','quiz','memory','wordsearch','scramble','safe','hangman','dictee','cloze'];
+  var MODE_IDS = ['flash','quiz','memory','wordsearch','scramble','safe','hangman','dictee','cloze','aventure'];
   var GRADES = [
     { key:'cp', label:'CP', pct:0 },
     { key:'ce1', label:'CE1', pct:12 },
@@ -898,6 +935,7 @@
     { id:'scramble', title:'Lettres mêlées', desc:"Remets les lettres mélangées dans le bon ordre.", icon:ICON_SCRAMBLE },
     { id:'safe', title:'Le Coffre-fort', desc:"Écoute le mot, tourne les molettes pour composer le code et ouvre le coffre.", icon:ICON_SAFE },
     { id:'hangman', title:'Le Pendu', desc:"Devine le mot lettre par lettre avant la fin du dessin.", icon:ICON_HANGMAN },
+    { id:'aventure', title:'Dictée-aventure', desc:"Une histoire écrite pour toi avec tes mots : avance de chapitre en chapitre pour trouver le trésor.", icon:ICON_ADVENTURE },
     { id:'cloze', title:'Phrase à trous', desc:"Retrouve le mot qui manque dans une phrase simple et écris-le.", icon:ICON_CLOZE },
     { id:'dictee', title:'Dictée audio', desc:"Écoute le mot puis écris-le, sans aucune aide visuelle : la vraie dictée.", icon:ICON_SPEAKER }
   ];
@@ -930,7 +968,7 @@
     if(idx > floor){ state.gradeFloors[listId] = idx; saveState(); floor = idx; }
     return Math.max(idx, floor);
   }
-  var LIST_SCREENS = ['dashboard','flash','dictee','cloze','quiz','memory','wordsearch','scramble','safe','hangman','results'];
+  var LIST_SCREENS = ['dashboard','flash','dictee','cloze','aventure','quiz','memory','wordsearch','scramble','safe','hangman','results'];
   function updateRankChip(){
     var chip = $('#rankChip');
     var list = getList(nav.listId);
@@ -985,7 +1023,7 @@
     var n = wsClean(w.w).length;
     return n >= 3 && n <= 12;
   }
-  function roundSizeFor(mode){ return (mode === 'memory' || mode === 'wordsearch' || mode === 'safe') ? 6 : ROUND_SIZE; }
+  function roundSizeFor(mode){ if(mode === 'aventure') return 8; return (mode === 'memory' || mode === 'wordsearch' || mode === 'safe') ? 6 : ROUND_SIZE; }
   function eligibleWords(list, mode){
     return list.words.filter(function(w){
       if(!canPlay(mode, w)) return false;
@@ -1013,14 +1051,46 @@
     refreshVoices();
     speechSynthesis.onvoiceschanged = refreshVoices;
   }
-  function speak(text){
+  function browserSpeak(text, slow){
     if(!window.speechSynthesis){ toast("La lecture audio n'est pas disponible sur ce navigateur."); return; }
     speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(text);
     u.lang = 'fr-FR';
-    u.rate = 0.85;
+    u.rate = slow ? 0.7 : 0.85;
     if(frVoice) u.voice = frVoice;
     speechSynthesis.speak(u);
+  }
+  /* Voix du serveur (Gemini, son mis en cache) quand elle existe ; sinon voix du navigateur. */
+  var serverCfg = { gemini:false, tts:false, themes:[] };
+  var audioCache = {}, currentAudio = null;
+  function fetchAudio(text, slow){
+    var k = (slow ? 's|' : 'n|') + text;
+    if(audioCache[k]) return audioCache[k];
+    var p = fetch('api/tts?text=' + encodeURIComponent(text) + (slow ? '&slow=1' : ''), { headers:{ 'X-Profil': encodeURIComponent(profileName()) } })
+      .then(function(r){ if(!r.ok) throw new Error('voix'); return r.blob(); })
+      .then(function(b){ return URL.createObjectURL(b); });
+    audioCache[k] = p;
+    p.catch(function(){ delete audioCache[k]; });
+    return p;
+  }
+  function speak(text, slow){
+    if(currentAudio){ currentAudio.pause(); currentAudio = null; }
+    if(window.speechSynthesis) speechSynthesis.cancel();
+    if(!serverCfg.tts){ browserSpeak(text, slow); return; }
+    fetchAudio(text, slow).then(function(url){
+      currentAudio = new Audio(url);
+      return currentAudio.play();
+    }).catch(function(){ browserSpeak(text, slow); });
+  }
+  // Prepare les sons d'une manche en arriere-plan (un a la fois, on s'arrete au premier echec).
+  function prefetchSpeech(items){
+    if(!serverCfg.tts) return;
+    var i = 0;
+    (function next(){
+      if(i >= items.length) return;
+      var it = items[i++];
+      fetchAudio(it.text, it.slow).then(next, function(){});
+    })();
   }
 
   /* ---------------- diff (LCS-based) ---------------- */
@@ -1193,6 +1263,7 @@
         disabled = n === 0;
         meta = n ? (n + ' mot' + (n>1?'s':'') + ' à faire') : (def.id === 'cloze' && !list.words.some(hasSentence) ? "Ajoute des phrases d'exemple" : 'Tout réussi ici !');
       }
+      if(def.id === 'aventure' && !serverCfg.gemini){ disabled = true; meta = 'Demande une clé Gemini sur le serveur'; }
       var card = el('button',{class:'mode-card', type:'button'});
       if(disabled) card.setAttribute('disabled','true');
       card.innerHTML = '<div class="ic">'+def.icon+'</div><h4>'+escapeHtml(def.title)+'</h4><p>'+escapeHtml(def.desc)+'</p><span class="mode-meta">'+escapeHtml(meta)+'</span>';
@@ -1255,9 +1326,17 @@
     nav.idx = 0;
     nav.results = [];
     nav.startGradeIdx = currentGradeIdx(nav.listId);
+    if(mode !== 'aventure'){
+      var seen = {}, queue = [];
+      nav.round.forEach(function(it){
+        [it.w, it.s].forEach(function(tx){ if(tx && !seen[tx]){ seen[tx] = true; queue.push({ text:tx, slow:false }); } });
+      });
+      prefetchSpeech(queue);
+    }
     if(mode==='flash') { goto('flash'); renderFlash(); }
     else if(mode==='dictee') { goto('dictee'); renderDictee(); }
     else if(mode==='cloze') { goto('cloze'); renderCloze(); }
+    else if(mode==='aventure') { goto('aventure'); renderAventureSetup(); }
     else if(mode==='quiz') { goto('quiz'); renderQuiz(); }
     else if(mode==='scramble') { goto('scramble'); renderScramble(); }
     else if(mode==='hangman') { goto('hangman'); renderHangman(); }
@@ -1441,6 +1520,204 @@
     var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
     next.addEventListener('click', function(){ nav.idx++; renderCloze(); });
     stage.appendChild(next);
+  }
+
+  /* ---------------- DICTEE-AVENTURE ---------------- */
+  var ADV_THEMES = ['libre','pirates','forêt enchantée','espace','ferme','château','enquête mystère','dinosaures'];
+  function advCfg(){
+    var c = state.settings.aventure || {};
+    return { theme: c.theme || 'libre', chapitres: Math.max(2, Math.min(10, parseInt(c.chapitres, 10) || 5)), anciens: Math.max(0, Math.min(5, parseInt(c.anciens, 10) || 0)) };
+  }
+  // Mots des autres listes (ceux ou l'enfant a fait des erreurs d'abord)
+  function pickOldWords(n){
+    if(!n) return [];
+    var here = {}; getList(nav.listId).words.forEach(function(w){ here[w.w.toLowerCase()] = true; });
+    var pool = [];
+    state.lists.forEach(function(l){
+      if(l.id === nav.listId) return;
+      l.words.forEach(function(w){
+        if(w.g || here[w.w.toLowerCase()]) return;
+        var p = peekProgress(l.id, w.w);
+        pool.push({ w:w.w, bad:(p && p.wrongCount) ? 1 : 0 });
+      });
+    });
+    var bad = shuffle(pool.filter(function(x){ return x.bad; })), ok = shuffle(pool.filter(function(x){ return !x.bad; }));
+    return bad.concat(ok).slice(0, n).map(function(x){ return x.w; });
+  }
+  function oldWordsAvailable(){
+    return state.lists.some(function(l){ return l.id !== nav.listId && l.words.length; });
+  }
+  function advProgress(label, pct){
+    $('#aventureProgressLabel').textContent = label;
+    $('#aventureProgressBar').style.width = pct + '%';
+  }
+  function stepperEl(value, min, max, onChange){
+    var box = el('div',{class:'stepper'});
+    var minus = el('button',{type:'button','aria-label':'Diminuer'}, '−');
+    var out = el('output',{}, String(value));
+    var plus = el('button',{type:'button','aria-label':'Augmenter'}, '+');
+    function set(v){ v = Math.max(min, Math.min(max, v)); out.textContent = String(v); onChange(v); }
+    minus.addEventListener('click', function(){ set(parseInt(out.textContent, 10) - 1); });
+    plus.addEventListener('click', function(){ set(parseInt(out.textContent, 10) + 1); });
+    box.appendChild(minus); box.appendChild(out); box.appendChild(plus);
+    return box;
+  }
+  function renderAventureSetup(){
+    var stage = $('#aventureStage');
+    var cfg = advCfg();
+    advProgress('Prêt', 0);
+    stage.innerHTML = '';
+    stage.appendChild(el('div',{class:'adv-title'}, "Dictée-aventure"));
+    stage.appendChild(el('p',{class:'sentence-display'}, "Une histoire va s'écrire avec tes mots. Écoute chaque chapitre, écris la phrase et avance jusqu'au trésor !"));
+    var form = el('div',{class:'adv-setup'});
+    var rowTheme = el('div',{class:'adv-row'}, '<span>Univers</span>');
+    var sel = el('select',{'aria-label':'Univers de l\'histoire'});
+    (serverCfg.themes && serverCfg.themes.length ? serverCfg.themes : ADV_THEMES).forEach(function(th){
+      var o = el('option',{value:th}, escapeHtml(th === 'libre' ? 'Surprise' : th));
+      if(th === cfg.theme) o.selected = true;
+      sel.appendChild(o);
+    });
+    rowTheme.appendChild(sel);
+    var rowLen = el('div',{class:'adv-row'}, '<span>Chapitres (une phrase chacun)</span>');
+    rowLen.appendChild(stepperEl(cfg.chapitres, 2, 10, function(v){ cfg.chapitres = v; }));
+    form.appendChild(rowTheme); form.appendChild(rowLen);
+    if(oldWordsAvailable()){
+      var rowOld = el('div',{class:'adv-row'}, '<span>Mots de mes anciennes listes</span>');
+      rowOld.appendChild(stepperEl(cfg.anciens, 0, 5, function(v){ cfg.anciens = v; }));
+      form.appendChild(rowOld);
+    }
+    stage.appendChild(form);
+    var go = el('button',{class:'btn btn-primary btn-lg'}, 'Partir à l\'aventure');
+    go.addEventListener('click', function(){
+      cfg.theme = sel.value;
+      state.settings.aventure = cfg;
+      saveState();
+      startAventure(cfg);
+    });
+    stage.appendChild(go);
+  }
+  function startAventure(cfg){
+    var stage = $('#aventureStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('div',{class:'adv-title'}, "L'histoire s'écrit…"));
+    stage.appendChild(el('p',{class:'sentence-display'}, 'Cela peut prendre quelques secondes.'));
+    apiFetch('api/aventure', { method:'POST', body: JSON.stringify({
+      mots: nav.round.map(function(w){ return w.w; }), anciens: pickOldWords(cfg.anciens), chapitres: cfg.chapitres, theme: cfg.theme
+    }) }).then(function(r){
+      nav.story = r; nav.chap = 0; nav.recorded = {}; nav.wrote = [];
+      prefetchSpeech(r.chapitres.map(function(c){ return { text:c.phrase, slow:true }; }));
+      renderChapter();
+    }).catch(function(e){ toast(e.message); renderAventureSetup(); });
+  }
+  function trailEl(current, total, finished){
+    var tr = el('div',{class:'trail', role:'img', 'aria-label':'Chapitre ' + Math.min(current+1, total) + ' sur ' + total});
+    for(var i=0;i<total;i++){
+      var done = finished || i < current;
+      tr.appendChild(el('span',{class:'trail-node'+(done?' done':(i===current?' now':''))}, done ? ICON_CHECK : String(i+1)));
+      tr.appendChild(el('span',{class:'trail-link'+(done?' done':'')}));
+    }
+    tr.appendChild(el('span',{class:'trail-node goal'+(finished?' done':'')}, ICON_RIBBON));
+    return tr;
+  }
+  // Comparaison mot a mot (LCS) entre la phrase attendue et ce que l'enfant a ecrit
+  function normTok(s){ return s.replace(/’/g, "'").toLowerCase().replace(/^[.,;:!?«»"()–—…\- ]+|[.,;:!?«»"()–—…\- ]+$/g, ''); }
+  function compareSentence(expected, typed){
+    var raw = expected.trim().split(/\s+/), E = raw.map(normTok);
+    var T = typed.trim().split(/\s+/).map(normTok).filter(Boolean);
+    var n = E.length, m = T.length, dp = [], i, j;
+    for(i=0;i<=n;i++) dp.push(new Array(m+1).fill(0));
+    for(i=n-1;i>=0;i--) for(j=m-1;j>=0;j--) dp[i][j] = E[i] === T[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+    var ok = new Array(n).fill(false);
+    i = 0; j = 0;
+    while(i<n && j<m){
+      if(E[i] === T[j]){ ok[i] = true; i++; j++; }
+      else if(dp[i+1][j] >= dp[i][j+1]) i++;
+      else j++;
+    }
+    return { raw:raw, norm:E, ok:ok };
+  }
+  // true / false si le mot est dans la phrase, null s'il n'y est pas
+  function wordResult(cmp, w){
+    var W = w.trim().split(/\s+/).map(normTok);
+    for(var s=0; s+W.length <= cmp.norm.length; s++){
+      var hit = true, k;
+      for(k=0;k<W.length;k++) if(cmp.norm[s+k] !== W[k]){ hit = false; break; }
+      if(hit){
+        for(k=0;k<W.length;k++) if(!cmp.ok[s+k]) return false;
+        return true;
+      }
+    }
+    return null;
+  }
+  function renderChapter(){
+    var stage = $('#aventureStage'), story = nav.story, total = story.chapitres.length;
+    if(nav.chap >= total){ renderAventureEnd(); return; }
+    var c = story.chapitres[nav.chap];
+    advProgress('Chapitre ' + (nav.chap+1) + ' / ' + total, Math.round(nav.chap/total*100));
+    stage.innerHTML = '';
+    stage.appendChild(trailEl(nav.chap, total, false));
+    stage.appendChild(el('div',{class:'adv-title'}, escapeHtml(story.titre)));
+    stage.appendChild(el('div',{class:'adv-chapter'}, 'Chapitre ' + (nav.chap+1) + (c.decor ? ' · ' + escapeHtml(c.decor) : '')));
+    if(nav.chap > 0){
+      stage.appendChild(el('div',{class:'adv-journal'}, '<strong>Carnet de bord</strong> ' + story.chapitres.slice(0, nav.chap).map(function(x){ return escapeHtml(x.phrase); }).join(' ')));
+    }
+    var listen = el('button',{class:'speak-btn'}, ICON_SPEAKER + 'Écouter le chapitre');
+    listen.addEventListener('click', function(){ speak(c.phrase, true); });
+    var replay = el('button',{class:'speak-btn replay'}, ICON_REPLAY + 'Réécouter');
+    replay.addEventListener('click', function(){ speak(c.phrase, true); });
+    stage.appendChild(listen); stage.appendChild(replay);
+    var area = el('textarea',{class:'adv-text', autocomplete:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Écris la phrase que tu entends', 'aria-label':'Ta phrase'});
+    stage.appendChild(area);
+    var check = el('button',{class:'btn btn-primary btn-lg'}, 'Valider ma phrase');
+    check.addEventListener('click', function(){ checkChapter(c, area.value); });
+    stage.appendChild(check);
+    setTimeout(function(){ speak(c.phrase, true); area.focus(); }, 350);
+  }
+  function checkChapter(c, typed){
+    typed = (typed || '').trim();
+    var stage = $('#aventureStage'), story = nav.story, total = story.chapitres.length;
+    var cmp = compareSentence(c.phrase, typed);
+    story.mots.forEach(function(w){
+      if(nav.recorded[w]) return;
+      var r = wordResult(cmp, w);
+      if(r !== null){ nav.recorded[w] = true; recordAttempt(w, r); }
+    });
+    var perfect = cmp.ok.every(function(v){ return v; });
+    stage.innerHTML = '';
+    stage.appendChild(trailEl(nav.chap + 1, total, false));
+    stage.appendChild(el('div',{class:'feedback-banner '+(perfect?'ok':'no')}, (perfect?ICON_CHECK:ICON_CROSS) + (perfect ? 'Chapitre réussi, tu avances !' : 'Un obstacle… mais tu continues !')));
+    stage.appendChild(el('div',{class:'adv-sentence'}, cmp.raw.map(function(tok, i){
+      return '<span class="'+(cmp.ok[i] ? 'tk-ok' : 'tk-bad')+'">'+escapeHtml(tok)+'</span>';
+    }).join(' ')));
+    if(!perfect) stage.appendChild(el('div',{class:'adv-wrote'}, 'Tu as écrit : ' + escapeHtml(typed || '(rien)')));
+    var listen = el('button',{class:'speak-btn replay'}, ICON_SPEAKER + 'Écouter la phrase');
+    listen.addEventListener('click', function(){ speak(c.phrase, false); });
+    stage.appendChild(listen);
+    var last = nav.chap + 1 >= total;
+    var next = el('button',{class:'btn btn-primary btn-lg'}, last ? 'Découvrir le trésor' : 'Chapitre suivant');
+    next.addEventListener('click', function(){ nav.chap++; renderChapter(); });
+    stage.appendChild(next);
+  }
+  function renderAventureEnd(){
+    var stage = $('#aventureStage'), story = nav.story;
+    advProgress('Trésor trouvé', 100);
+    stage.innerHTML = '';
+    stage.appendChild(trailEl(story.chapitres.length, story.chapitres.length, true));
+    stage.appendChild(el('div',{class:'adv-title'}, 'Fin de l\'aventure !'));
+    var won = nav.results.filter(function(r){ return r.correct; }).length;
+    stage.appendChild(el('p',{class:'sentence-display'}, 'Tu rapportes ' + won + ' mot' + (won>1?'s':'') + ' sur ' + nav.results.length + '. Voici toute l\'histoire :'));
+    var box = el('div',{class:'adv-story'}, '<h4>' + escapeHtml(story.titre) + '</h4>');
+    story.chapitres.forEach(function(c, i){
+      box.appendChild(el('h4',{}, 'Chapitre ' + (i+1) + (c.decor ? ' · ' + escapeHtml(c.decor) : '')));
+      box.appendChild(el('p',{}, escapeHtml(c.phrase)));
+    });
+    stage.appendChild(box);
+    var read = el('button',{class:'speak-btn replay'}, ICON_SPEAKER + "Écouter l'histoire");
+    read.addEventListener('click', function(){ speak(story.chapitres.map(function(c){ return c.phrase; }).join(' '), true); });
+    stage.appendChild(read);
+    var done = el('button',{class:'btn btn-primary btn-lg'}, 'Voir le résultat');
+    done.addEventListener('click', function(){ finishRound(); });
+    stage.appendChild(done);
   }
 
   /* ---------------- QUIZ ---------------- */
@@ -2182,7 +2459,11 @@
   }).join('');
   $('#declConj').addEventListener('change', function(){ $('#declTemps').hidden = !this.checked; });
 
-  apiFetch('api/config').then(function(c){ if(c.gemini) $('#btnPhrases').hidden = false; }).catch(function(){});
+  apiFetch('api/config').then(function(c){
+    serverCfg = c;
+    if(c.gemini) $('#btnPhrases').hidden = false;
+    if(nav.screen === 'dashboard') renderDashboard();
+  }).catch(function(){});
   $('#btnPhrases').addEventListener('click', function(){
     var lines = currentLines();
     var need = lines.filter(function(l){ return !parseConjLine(l) && l.indexOf(';') === -1; });

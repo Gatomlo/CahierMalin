@@ -11,7 +11,7 @@ process.env.CAHIER_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'cahier-'));
 delete process.env.GEMINI_API_KEY;
 
 const app = require('../server');
-let base, fake, srv, fakeCalls = 0;
+let base, fake, srv, fakeCalls = 0, ttsCalls = 0;
 
 test.before(async () => {
   fake = http.createServer((req, res) => {
@@ -19,14 +19,22 @@ test.before(async () => {
     let body = '';
     req.on('data', (c) => { body += c; });
     req.on('end', () => {
-      assert.ok(JSON.parse(body).contents);
+      const prompt = JSON.parse(body).contents[0].parts[0].text;
+      res.setHeader('content-type', 'application/json');
+      if (req.url.includes('tts')) {
+        ttsCalls++;
+        return res.end(JSON.stringify({ candidates: [{ content: { parts: [{ inlineData: { mimeType: 'audio/L16;codec=pcm;rate=24000', data: Buffer.alloc(4800).toString('base64') } }] } }] }));
+      }
+      if (prompt.includes('courte aventure')) {
+        const chapitres = [{ decor: 'La forêt', phrase: 'Lina marche beaucoup dans la forêt.' }, { decor: 'Le pont', phrase: 'Tout à coup, une hirondelle passe.' }, { decor: 'Fin', phrase: 'Elle rentre à la maison.' }];
+        return res.end(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ titre: 'Lina', chapitres }) }] } }] }));
+      }
       const mots = [{ mot: 'finir', nature: 'verbe', formes: [
         { texte: 'nous finissons', type: 'conjugaison', libelle: 'présent', phrase: 'Nous finissons le travail.' },
         { texte: 'je finis', type: 'conjugaison', libelle: 'présent', phrase: 'Phrase sans la forme.' },
         { texte: 'finir', type: 'conjugaison', libelle: 'infinitif', phrase: '' },
         { texte: 'pirate', type: 'inconnu', libelle: 'x', phrase: '' },
       ] }];
-      res.setHeader('content-type', 'application/json');
       res.end(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ mots }) }] } }] }));
     });
   });
@@ -110,4 +118,31 @@ test('conjugaison sans cle : verbes reguliers, personnes choisies', async () => 
 test('phrases : cle Gemini requise', async () => {
   const r = await call('/api/phrases', { method: 'POST', body: JSON.stringify({ mots: ['maison'] }) });
   assert.equal(r.status, 400);
+});
+
+test('aventure : sans cle refusee, avec cle histoire validee', async () => {
+  const body = JSON.stringify({ mots: ['beaucoup', 'une hirondelle', 'tout à coup', 'maison'], anciens: ['forêt'], chapitres: 3, theme: 'pirates' });
+  assert.equal((await call('/api/aventure', { method: 'POST', body })).status, 400);
+  process.env.GEMINI_API_KEY = 'cle-test';
+  process.env.GEMINI_BASE_URL = `http://127.0.0.1:${fake.address().port}`;
+  const d = await (await call('/api/aventure', { method: 'POST', body })).json();
+  assert.equal(d.chapitres.length, 3);
+  assert.deepEqual(d.mots.sort(), ['beaucoup', 'maison', 'tout à coup', 'une hirondelle'].sort());
+  assert.deepEqual(d.anciens, ['forêt']);
+  delete process.env.GEMINI_API_KEY;
+});
+
+test('voix : cache disque, WAV valide, repli sans cle', async () => {
+  assert.equal((await call('/api/tts?text=bonjour')).status, 503);
+  process.env.GEMINI_API_KEY = 'cle-test';
+  process.env.GEMINI_BASE_URL = `http://127.0.0.1:${fake.address().port}`;
+  const r = await call('/api/tts?text=' + encodeURIComponent('Bonjour les enfants'));
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get("content-type"), /wav/);
+  const buf = Buffer.from(await r.arrayBuffer());
+  assert.equal(buf.slice(0, 4).toString(), 'RIFF');
+  assert.equal(buf.length, 44 + 4800);
+  await (await call('/api/tts?text=' + encodeURIComponent('Bonjour les enfants'))).arrayBuffer();
+  assert.equal(ttsCalls, 1); // la seconde lecture vient du cache
+  delete process.env.GEMINI_API_KEY;
 });
