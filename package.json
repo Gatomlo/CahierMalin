@@ -1,0 +1,17 @@
+{
+  "name": "cahier-malin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Le Cahier Malin : entrainement aux mots de dictee (8 jeux), listes et progression en SQLite, declinaisons (pluriel, feminin, conjugaison) par regles ou Gemini. Montable dans node-gateway.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

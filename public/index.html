@@ -1,0 +1,2210 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Le Cahier Malin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Baloo+2:wght@500;600;700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --desk:#F0E8D6;
+    --paper:#FCF8EE;
+    --paper-edge:#E4D9BF;
+    --ink:#26415F;
+    --ink-soft:#5B7290;
+    --line:#C7D6E7;
+    --margin:#D97878;
+    --red:#C0392B;
+    --green:#3E7D58;
+    --gold:#A9781F;
+    --surface:#FFFFFF;
+    --focus:#2F6FB0;
+    --shadow: 0 1px 2px rgba(38,65,95,.06), 0 8px 24px -12px rgba(38,65,95,.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --desk:#10140E;
+      --paper:#1D2B22;
+      --paper-edge:#101A13;
+      --ink:#EFEAD8;
+      --ink-soft:#A9B7A8;
+      --line:#33463A;
+      --margin:#C97575;
+      --red:#E1735B;
+      --green:#7FC79A;
+      --gold:#E8C468;
+      --surface:#263628;
+      --focus:#7FB8E8;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px -12px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --desk:#10140E;
+    --paper:#1D2B22;
+    --paper-edge:#101A13;
+    --ink:#EFEAD8;
+    --ink-soft:#A9B7A8;
+    --line:#33463A;
+    --margin:#C97575;
+    --red:#E1735B;
+    --green:#7FC79A;
+    --gold:#E8C468;
+    --surface:#263628;
+    --focus:#7FB8E8;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px -12px rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--desk);
+    color:var(--ink);
+    font-family:'Karla',ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:760px;
+    margin:0 auto;
+    padding:28px 16px 64px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  /* ---------- header ---------- */
+  .topbar{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:14px;
+    padding:0 6px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand svg{ width:34px; height:34px; flex:none; }
+  .brand h1{
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:2.4rem;
+    line-height:1;
+    margin:0;
+    color:var(--ink);
+  }
+  .brand .sub{
+    font-family:'Karla';
+    font-size:.72rem;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .stamp{
+    position:relative;
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:1.25rem;
+    color:var(--gold);
+    border:2.5px dashed var(--gold);
+    border-radius:50%;
+    width:64px;height:64px;
+    display:flex;align-items:center;justify-content:center;
+    transform:rotate(-9deg);
+    flex:none;
+    background:color-mix(in srgb, var(--gold) 8%, transparent);
+  }
+  .progress-cluster{ display:flex; align-items:center; gap:12px; }
+  .rank-chip{ display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+  .rank-label{ font-family:'Baloo 2'; font-weight:700; font-size:.95rem; color:var(--ink); }
+  .rank-track{ width:110px; height:6px; border-radius:4px; background:var(--line); overflow:hidden; }
+  .rank-track > span{ display:block; height:100%; background:var(--gold); }
+  .rank-next{ font-size:.68rem; color:var(--ink-soft); white-space:nowrap; }
+  @media (max-width:480px){ .rank-track{ width:70px; } .rank-next{ display:none; } }
+
+  /* ---------- notebook page shell ---------- */
+  .page{
+    display:none;
+    background:var(--paper);
+    border:1px solid var(--paper-edge);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:26px 24px 24px 44px;
+    position:relative;
+    overflow:hidden;
+    background-image:
+      repeating-linear-gradient(to bottom, transparent 0 33px, var(--line) 33px 34px),
+      linear-gradient(to right, transparent 0 34px, var(--margin) 34px 35.5px, transparent 35.5px);
+    background-position: 0 4px, 0 0;
+  }
+  .page.active{ display:block; animation:pagein .38s ease both; }
+  @media (prefers-reduced-motion:reduce){ .page.active{ animation:none; } }
+  @keyframes pagein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  .page-head{ margin-bottom:18px; }
+  .eyebrow{
+    font-family:'Karla'; font-weight:700; font-size:.7rem;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--ink-soft);
+    margin:0 0 4px;
+  }
+  h2.page-title{
+    font-family:'Baloo 2'; font-weight:700; font-size:1.5rem;
+    margin:0; color:var(--ink);
+  }
+  p.lede{ color:var(--ink-soft); font-size:.95rem; margin:6px 0 0; max-width:56ch; }
+
+  /* ---------- buttons ---------- */
+  button{ font-family:inherit; }
+  .btn{
+    font-family:'Baloo 2'; font-weight:600; font-size:.95rem;
+    border-radius:10px; border:1.5px solid transparent; cursor:pointer;
+    padding:11px 18px; display:inline-flex; align-items:center; gap:8px;
+    transition:transform .12s ease, box-shadow .12s ease, background .15s ease;
+    color:var(--ink);
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn:focus-visible{ outline:3px solid var(--focus); outline-offset:2px; }
+  .btn-primary{ background:var(--ink); color:var(--paper); box-shadow:var(--shadow); }
+  .btn-primary:hover{ box-shadow:0 10px 20px -10px color-mix(in srgb, var(--ink) 60%, transparent); }
+  .btn-ghost{ background:transparent; border-color:var(--paper-edge); color:var(--ink); }
+  .btn-ghost:hover{ background:color-mix(in srgb, var(--ink) 6%, transparent); }
+  .btn-danger{ background:transparent; border-color:color-mix(in srgb, var(--red) 45%, transparent); color:var(--red); }
+  .btn-danger:hover{ background:color-mix(in srgb, var(--red) 10%, transparent); }
+  .btn-lg{ padding:14px 24px; font-size:1.05rem; }
+  .btn[disabled]{ opacity:.4; cursor:not-allowed; }
+  .btn svg{ width:18px; height:18px; }
+
+  .backlink{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'Karla'; font-weight:600; font-size:.85rem;
+    color:var(--ink-soft); background:none; border:none; cursor:pointer;
+    padding:4px 2px; margin-bottom:6px;
+  }
+  .backlink:hover{ color:var(--ink); }
+  .backlink svg{ width:15px; height:15px; }
+
+  /* ---------- home: list cards ---------- */
+  .lists{ display:flex; flex-direction:column; gap:12px; }
+  .list-card{
+    background:var(--surface); border:1px solid var(--paper-edge); border-radius:12px;
+    padding:16px 18px; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
+  }
+  .list-card .info{ flex:1; min-width:0; }
+  .list-card h3{ font-family:'Baloo 2'; font-weight:700; font-size:1.08rem; margin:0 0 3px; color:var(--ink); }
+  .list-card .meta{ font-size:.82rem; color:var(--ink-soft); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .mastery-bar{ width:100px; height:6px; border-radius:4px; background:var(--line); overflow:hidden; flex:none; }
+  .mastery-bar > span{ display:block; height:100%; background:var(--green); }
+  .list-card .actions{ display:flex; gap:6px; flex:none; }
+  .icon-btn{
+    width:34px; height:34px; border-radius:8px; border:1px solid var(--paper-edge);
+    background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-soft);
+  }
+  .icon-btn:hover{ background:color-mix(in srgb, var(--ink) 6%, transparent); color:var(--ink); }
+  .icon-btn svg{ width:16px; height:16px; }
+
+  .empty{
+    text-align:center; padding:34px 20px; color:var(--ink-soft);
+    font-family:'Karla'; font-size:.95rem;
+  }
+
+  /* ---------- dashboard ---------- */
+  .modes{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px; }
+  @media (max-width:520px){ .modes{ grid-template-columns:1fr; } }
+  .mode-card{
+    position:relative;
+    background:var(--surface); border:1px solid var(--paper-edge); border-radius:12px;
+    padding:16px; text-align:left; cursor:pointer; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:8px; transition:transform .12s ease;
+  }
+  .mode-card:hover{ transform:translateY(-2px); }
+  .mode-card:focus-visible{ outline:3px solid var(--focus); outline-offset:2px; }
+  .mode-card[disabled]{ opacity:.5; cursor:not-allowed; transform:none; }
+  .mode-card .ic{
+    width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    background:color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+  .mode-card .ic svg{ width:20px; height:20px; color:var(--ink); }
+  .mode-card h4{ font-family:'Baloo 2'; font-size:1.02rem; margin:0; color:var(--ink); }
+  .mode-card p{ font-size:.82rem; color:var(--ink-soft); margin:0; line-height:1.4; }
+
+  p.unlock-hint{
+    font-size:.85rem; color:var(--ink-soft); margin:14px 0 0; font-family:'Karla';
+    background:var(--surface); border:1px solid var(--paper-edge); border-radius:9px; padding:9px 14px;
+  }
+
+  .mode-meta{
+    font-family:'Karla'; font-weight:700; font-size:.75rem; color:var(--ink);
+    background:color-mix(in srgb, var(--ink) 8%, transparent); border-radius:12px; padding:2px 9px; align-self:flex-start;
+  }
+
+  .score-block{ margin-top:14px; background:var(--surface); border:1px solid var(--paper-edge); border-radius:10px; padding:12px 14px; }
+  .score-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .score-label{ font-family:'Baloo 2'; font-weight:600; font-size:.9rem; color:var(--ink); }
+  .score-pct{ font-family:'JetBrains Mono'; font-weight:600; font-size:1.2rem; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .score-track{ height:8px; border-radius:5px; background:var(--line); overflow:hidden; margin-top:8px; }
+  .score-track > span{ display:block; height:100%; background:var(--green); transition:width .4s ease; }
+  .score-detail{ margin:8px 0 0; font-size:.8rem; color:var(--ink-soft); }
+
+  .seg{ display:inline-flex; margin-top:14px; border:1.5px solid var(--paper-edge); border-radius:10px; overflow:hidden; background:var(--surface); }
+  .seg-btn{ font-family:'Baloo 2'; font-weight:600; font-size:.9rem; padding:9px 16px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; }
+  .seg-btn[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
+  .seg-btn:focus-visible{ outline:3px solid var(--focus); outline-offset:-3px; }
+
+  .words-panel{ display:flex; flex-direction:column; gap:16px; margin-top:22px; }
+  .wg-title{ font-family:'Baloo 2'; font-weight:700; font-size:1rem; margin:0 0 8px; display:flex; align-items:center; gap:8px; color:var(--ink); }
+  .wg-count{ font-family:'JetBrains Mono'; font-weight:600; font-size:.75rem; color:var(--ink-soft); border:1px solid var(--paper-edge); border-radius:10px; padding:0 8px; }
+  .wg-empty{ font-size:.85rem; color:var(--ink-soft); margin:0; }
+  .word-chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    display:inline-flex; align-items:center; gap:9px;
+    background:var(--surface); border:1px solid var(--paper-edge); border-radius:20px;
+    padding:6px 12px; font-size:.85rem; color:var(--ink); cursor:pointer;
+  }
+  .chip:hover{ border-color:var(--ink-soft); }
+  .chip.is-practice{ border-color:color-mix(in srgb, var(--red) 55%, var(--paper-edge)); }
+  .chip.is-acquired{ border-color:var(--green); background:color-mix(in srgb, var(--green) 12%, var(--surface)); }
+  .chip .check{ width:14px; height:14px; color:var(--green); flex:none; }
+  .pips{ display:inline-flex; gap:3px; }
+  .pip{ width:8px; height:8px; border-radius:50%; border:1.5px solid var(--ink-soft); }
+  .pip.on{ background:var(--green); border-color:var(--green); }
+
+  .settings{
+    display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; margin-top:22px; padding-top:16px;
+    border-top:1px dashed var(--paper-edge); font-size:.85rem; color:var(--ink-soft);
+  }
+  .stepper{ display:inline-flex; align-items:center; border:1.5px solid var(--paper-edge); border-radius:8px; background:var(--surface); }
+  .stepper button{ width:30px; height:30px; border:none; background:transparent; color:var(--ink); font-size:1.1rem; cursor:pointer; }
+  .stepper button:focus-visible{ outline:3px solid var(--focus); outline-offset:-3px; }
+  .stepper output{ min-width:26px; text-align:center; font-family:'JetBrains Mono'; font-weight:600; color:var(--ink); }
+
+  /* ---------- game screens ---------- */
+  .game-progress{
+    display:flex; align-items:center; gap:10px; margin-bottom:20px; font-family:'JetBrains Mono';
+    font-size:.78rem; color:var(--ink-soft);
+  }
+  .game-progress .track{ flex:1; height:5px; border-radius:3px; background:var(--line); overflow:hidden; }
+  .game-progress .track > span{ display:block; height:100%; background:var(--ink); }
+
+  .stage{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:18px; padding:10px 0 4px; }
+  .word-display{
+    font-family:'Baloo 2'; font-weight:700; font-size:2.1rem; color:var(--ink);
+    letter-spacing:.01em;
+  }
+  .sentence-display{ font-family:'Karla'; font-size:1.05rem; color:var(--ink-soft); max-width:44ch; }
+  .sentence-display .blank{ display:inline-block; min-width:2.4em; border-bottom:2px solid var(--ink-soft); }
+  .hidden-word{
+    font-family:'Baloo 2'; font-weight:700; font-size:1.6rem; letter-spacing:.35em; color:var(--ink-soft);
+    user-select:none;
+  }
+
+  .answer-input{
+    width:100%; max-width:420px; font-family:'Baloo 2'; font-weight:600; font-size:1.3rem;
+    text-align:center; padding:13px 16px; border-radius:10px; border:2px solid var(--paper-edge);
+    background:var(--surface); color:var(--ink);
+  }
+  .answer-input:focus{ outline:none; border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent); }
+
+  .diff-line{
+    font-family:'JetBrains Mono'; font-size:1.35rem; letter-spacing:.02em;
+    display:flex; flex-wrap:wrap; justify-content:center; gap:1px; padding:14px 10px;
+    background:var(--surface); border-radius:10px; border:1px solid var(--paper-edge); min-height:2.6em; align-items:center;
+  }
+  .diff-line span{ display:inline-block; }
+  .diff-equal{ color:var(--ink); }
+  .diff-insert{ color:var(--red); text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px; }
+  .diff-delete{ color:var(--red); text-decoration:line-through; opacity:.75; }
+
+  .feedback-banner{
+    font-family:'Baloo 2'; font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:8px;
+  }
+  .feedback-banner.ok{ color:var(--green); }
+  .feedback-banner.no{ color:var(--red); }
+  .feedback-banner svg{ width:22px; height:22px; }
+
+  .quiz-options{ display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; max-width:480px; }
+  @media (max-width:480px){ .quiz-options{ grid-template-columns:1fr; } }
+  .quiz-opt{
+    font-family:'JetBrains Mono'; font-size:1rem; padding:13px 10px; border-radius:10px;
+    border:2px solid var(--paper-edge); background:var(--surface); color:var(--ink); cursor:pointer;
+  }
+  .quiz-opt:hover{ border-color:var(--ink-soft); }
+  .quiz-opt.correct{ border-color:var(--green); background:color-mix(in srgb, var(--green) 14%, var(--surface)); color:var(--green); }
+  .quiz-opt.wrong{ border-color:var(--red); background:color-mix(in srgb, var(--red) 14%, var(--surface)); color:var(--red); }
+  .quiz-opt[disabled]{ cursor:default; }
+
+  .speak-btn{
+    display:inline-flex; align-items:center; gap:8px; background:var(--ink); color:var(--paper);
+    border:none; border-radius:24px; padding:13px 22px; font-family:'Baloo 2'; font-weight:600; font-size:1rem;
+    cursor:pointer; box-shadow:var(--shadow);
+  }
+  .speak-btn svg{ width:19px; height:19px; }
+  .speak-btn.replay{ background:transparent; color:var(--ink); border:1.5px solid var(--paper-edge); box-shadow:none; padding:9px 16px; font-size:.85rem; }
+
+  .board-mode .page{
+    background:var(--paper); /* dictée uses same tokens; distinct feel via chalk texture */
+  }
+  .chalk-frame{
+    background: radial-gradient(120% 140% at 30% 0%, color-mix(in srgb, var(--ink) 4%, transparent), transparent 60%);
+    border-radius:10px; padding:22px; width:100%;
+  }
+
+  .row-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:6px; }
+
+  /* ---------- lettres mêlées ---------- */
+  .scramble-wrap{ display:flex; flex-wrap:wrap; gap:20px; justify-content:center; }
+  .scramble-block{ display:flex; flex-direction:column; gap:10px; align-items:center; }
+  .scramble-slots{ display:flex; gap:5px; }
+  .scramble-slot{
+    width:34px; height:40px; border-radius:8px; border:2px dashed var(--paper-edge);
+    background:var(--surface); font-family:'JetBrains Mono'; font-weight:600; font-size:1.1rem;
+    color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:default; padding:0;
+  }
+  .scramble-slot.filled{ border-style:solid; border-color:var(--focus); cursor:pointer; }
+  .scramble-tray{ display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:220px; }
+  .scramble-tile{
+    width:34px; height:40px; border-radius:8px; border:1.5px solid var(--paper-edge);
+    background:var(--ink); color:var(--paper); font-family:'JetBrains Mono'; font-weight:600; font-size:1.1rem;
+    cursor:pointer; padding:0; transition:transform .1s ease;
+  }
+  .scramble-tile:hover{ transform:translateY(-2px); }
+  .scramble-tile.used{ visibility:hidden; }
+
+  /* ---------- memory ---------- */
+  .memory-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; width:100%; max-width:480px; }
+  @media (max-width:480px){ .memory-grid{ grid-template-columns:repeat(3, 1fr); } }
+  .mem-card{
+    aspect-ratio:1 / 1; min-width:0; padding:4px; border-radius:12px; cursor:pointer;
+    border:2px solid var(--ink); background:var(--ink); color:var(--paper);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:'Baloo 2'; font-weight:600; font-size:clamp(.78rem, 2.6vw, 1rem); line-height:1.1; overflow-wrap:anywhere;
+  }
+  .mem-card:focus-visible{ outline:3px solid var(--focus); outline-offset:2px; }
+  .mem-back{ font-family:'Caveat'; font-weight:700; font-size:2rem; opacity:.55; }
+  .mem-front{ display:none; align-items:center; justify-content:center; }
+  .mem-front svg{ width:28px; height:28px; }
+  .mem-card.up{ background:var(--surface); color:var(--ink); border-color:var(--focus); }
+  .mem-card.up .mem-back, .mem-card.matched .mem-back{ display:none; }
+  .mem-card.up .mem-front, .mem-card.matched .mem-front{ display:flex; }
+  .mem-card.matched{ background:color-mix(in srgb, var(--green) 14%, var(--surface)); color:var(--green); border-color:var(--green); }
+
+  /* ---------- mots mêlés ---------- */
+  .ws-words{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:480px; }
+  .ws-word{ font-family:'Baloo 2'; font-weight:600; font-size:.88rem; padding:2px 10px; border:1px solid var(--paper-edge); border-radius:14px; background:var(--surface); color:var(--ink); }
+  .ws-word.found{ text-decoration:line-through; color:var(--green); border-color:var(--green); }
+  .ws-word.missed{ color:var(--red); border-color:var(--red); }
+  .ws-grid{ display:grid; gap:2px; width:100%; max-width:440px; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .ws-cell{
+    aspect-ratio:1 / 1; display:flex; align-items:center; justify-content:center; border-radius:6px;
+    font-family:'JetBrains Mono'; font-weight:600; font-size:clamp(.7rem, 3.4vw, 1.05rem); color:var(--ink);
+    background:var(--surface); border:1px solid var(--paper-edge); cursor:pointer;
+  }
+  .ws-cell.sel{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .ws-cell.f0{ background:color-mix(in srgb, var(--green) 32%, var(--surface)); }
+  .ws-cell.f1{ background:color-mix(in srgb, var(--focus) 32%, var(--surface)); }
+  .ws-cell.f2{ background:color-mix(in srgb, var(--gold) 34%, var(--surface)); }
+  .ws-cell.f3{ background:color-mix(in srgb, var(--red) 28%, var(--surface)); }
+  .ws-cell.f4{ background:color-mix(in srgb, var(--margin) 34%, var(--surface)); }
+  .ws-cell.f5{ background:color-mix(in srgb, var(--ink-soft) 30%, var(--surface)); }
+
+  /* ---------- coffre-fort ---------- */
+  .safe-figure{ width:110px; color:var(--ink); }
+  .safe-figure svg{ width:100%; height:auto; display:block; }
+  .safe-svg .treasure{ opacity:0; transition:opacity .35s ease; }
+  .safe-svg .dial{ transition:opacity .35s ease; }
+  .safe-figure.open .treasure{ opacity:1; }
+  .safe-figure.open .dial{ opacity:0; }
+  @media (prefers-reduced-motion:reduce){ .safe-svg .treasure, .safe-svg .dial{ transition:none; } }
+  .safe-tries{ display:flex; gap:8px; align-items:center; }
+  .safe-tries::before{ content:'Essais'; font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-right:4px; }
+  .try{ width:14px; height:14px; border-radius:50%; border:2px solid var(--gold); background:var(--gold); }
+  .try.used{ background:transparent; opacity:.45; }
+  .safe-wheels{ display:flex; flex-wrap:wrap; gap:14px 18px; justify-content:center; max-width:560px; }
+  .wheel-group{ display:flex; gap:6px; align-items:flex-start; }
+  .wheel{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .wheel-btn{ width:34px; height:20px; padding:0; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .wheel-btn:hover{ color:var(--ink); }
+  .wheel-btn svg{ width:14px; height:14px; }
+  .wheel-frame{ position:relative; width:34px; height:102px; border-radius:8px; background:var(--ink); overflow:hidden; }
+  .wheel-frame::after{ content:''; position:absolute; left:0; right:0; top:34px; height:34px; border:2px solid var(--gold); border-radius:6px; pointer-events:none; }
+  .wheel-view{ width:100%; height:100%; overflow-y:scroll; scroll-snap-type:y mandatory; scrollbar-width:none; overscroll-behavior:contain; touch-action:pan-y; }
+  .wheel-view::-webkit-scrollbar{ display:none; }
+  .wheel-view:focus-visible{ outline:3px solid var(--focus); outline-offset:2px; }
+  .wheel-list{ padding:34px 0; }
+  .wheel-item{
+    height:34px; scroll-snap-align:center; display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono'; font-weight:600; font-size:1.15rem; color:var(--paper); opacity:.4;
+  }
+  .wheel-item.sel{ opacity:1; }
+  .wheel-static{ height:102px; display:flex; align-items:center; padding:0 2px; margin-top:22px; font-family:'JetBrains Mono'; font-weight:600; font-size:1.3rem; color:var(--ink); }
+  .wheel-light{ width:10px; height:10px; border-radius:50%; background:var(--line); margin-top:4px; }
+  .wheel-light.ok{ background:var(--green); }
+  .wheel-light.bad{ background:var(--red); }
+  .safe-msg{ min-height:1.3em; margin:0; font-size:.9rem; color:var(--ink-soft); max-width:44ch; }
+
+  /* ---------- le pendu ---------- */
+  .hangman-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .hangman-figure{ width:100px; color:var(--ink); }
+  .hangman-figure svg{ width:100%; height:auto; display:block; }
+  .hangman-svg .part{ opacity:0; transition:opacity .2s ease; }
+  .hangman-svg .part.visible{ opacity:1; }
+  @media (prefers-reduced-motion:reduce){ .hangman-svg .part{ transition:none; } }
+  .hangman-word{ display:flex; gap:5px; flex-wrap:wrap; justify-content:center; }
+  .hangman-letterbox{
+    min-width:24px; height:34px; border-bottom:3px solid var(--ink-soft);
+    font-family:'JetBrains Mono'; font-weight:600; font-size:1.25rem; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hangman-letterbox.is-space{ border-bottom:none; min-width:14px; }
+  .hangman-keys{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:460px; }
+  .key-btn{
+    width:32px; height:36px; border-radius:7px; border:1.5px solid var(--paper-edge);
+    background:var(--surface); color:var(--ink); font-family:'JetBrains Mono'; font-weight:600; font-size:.85rem; cursor:pointer;
+  }
+  .key-btn:hover{ border-color:var(--ink-soft); }
+  .key-btn.used-correct{ background:color-mix(in srgb, var(--green) 20%, var(--surface)); border-color:var(--green); color:var(--green); }
+  .key-btn.used-wrong{ background:color-mix(in srgb, var(--red) 16%, var(--surface)); border-color:var(--red); color:var(--red); }
+  .key-btn[disabled]{ cursor:default; }
+
+  /* ---------- results ---------- */
+  .results-stamp{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 0 6px; }
+  .results-stamp .big-star{ width:64px; height:64px; color:var(--gold); }
+  .results-stamp .tally{ font-family:'Caveat'; font-weight:700; font-size:2.6rem; color:var(--ink); }
+  .levelup-banner{
+    display:flex; align-items:center; gap:8px; justify-content:center;
+    font-family:'Baloo 2'; font-weight:600; font-size:.92rem; color:var(--ink);
+    background:color-mix(in srgb, var(--gold) 16%, var(--surface)); border:1.5px solid var(--gold);
+    border-radius:10px; padding:10px 16px; max-width:440px; margin:0 auto 10px; text-align:left;
+  }
+  .levelup-banner svg{ width:22px; height:22px; color:var(--gold); flex:none; }
+  .levelup-banner[hidden]{ display:none; }
+  .results-list{ display:flex; flex-direction:column; gap:6px; margin:18px auto; width:100%; max-width:420px; }
+  .results-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 12px; border-radius:8px; background:var(--surface); border:1px solid var(--paper-edge); font-size:.9rem; }
+  .results-row .w{ font-family:'Baloo 2'; font-weight:600; }
+  .row-right{ display:flex; align-items:center; gap:8px; }
+  .tag-acq{ font-family:'Baloo 2'; font-weight:600; font-size:.72rem; color:var(--green); border:1px solid var(--green); border-radius:10px; padding:1px 8px; }
+  .results-score{ text-align:center; font-size:.9rem; color:var(--ink-soft); margin:0; }
+  .results-row.ok .w{ color:var(--green); }
+  .results-row.no .w{ color:var(--red); }
+  .results-row svg{ width:18px; height:18px; flex:none; }
+  .results-row.ok svg{ color:var(--green); }
+  .results-row.no svg{ color:var(--red); }
+
+  /* ---------- editor ---------- */
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:16px; text-align:left; }
+  .field label{ font-family:'Baloo 2'; font-weight:600; font-size:.85rem; color:var(--ink); }
+  .field .hint{ font-size:.78rem; color:var(--ink-soft); }
+  .field input[type=text], .field textarea{
+    font-family:'Karla'; font-size:.95rem; padding:10px 12px; border-radius:8px;
+    border:1.5px solid var(--paper-edge); background:var(--surface); color:var(--ink); resize:vertical;
+  }
+  .field textarea{ min-height:160px; font-family:'JetBrains Mono'; font-size:.85rem; line-height:1.6; }
+  .field input:focus, .field textarea:focus{ outline:none; border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent); }
+
+  .mistakes-list{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .mistake-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--surface); border:1px solid var(--paper-edge); border-radius:9px; padding:10px 14px;
+  }
+  .mistake-row .w{ font-family:'Baloo 2'; font-weight:600; }
+  .mistake-row .count{ font-family:'JetBrains Mono'; font-size:.78rem; color:var(--red); }
+
+  .toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%);
+    background:var(--ink); color:var(--paper); font-family:'Baloo 2'; font-weight:600; font-size:.88rem;
+    padding:11px 18px; border-radius:24px; box-shadow:var(--shadow); z-index:50;
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-4px); }
+
+  .decl-opts{ display:flex; flex-wrap:wrap; gap:6px 16px; margin:4px 0; }
+  .decl-check{ font-family:'Karla'; font-weight:500; font-size:.88rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+  .decl-group{ background:var(--surface); border:1px solid var(--paper-edge); border-radius:9px; padding:10px 12px; margin-top:8px; }
+  .decl-group h4{ font-family:'Baloo 2'; font-size:.95rem; margin:0 0 6px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+  .decl-group h4 small{ font-family:'Karla'; font-weight:500; color:var(--ink-soft); font-size:.75rem; }
+  .decl-sub{ font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin:8px 0 2px; }
+  .decl-form{ display:flex; align-items:center; gap:8px; font-size:.9rem; padding:2px 0; cursor:pointer; }
+  .decl-form em{ color:var(--ink-soft); font-size:.78rem; font-style:normal; }
+  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M8 30 L26 12 L32 18 L14 36 L7 37 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="color:var(--ink)"/>
+        <path d="M23 15 L29 21" stroke="currentColor" stroke-width="2" style="color:var(--ink)"/>
+        <path d="M8 30 L7 37 L14 36 Z" fill="var(--red)" stroke="var(--red)" stroke-width="1"/>
+      </svg>
+      <div>
+        <h1>Le Cahier Malin</h1>
+        <div class="sub">Entraînement aux mots de dictée</div>
+      </div>
+    </div>
+    <div class="progress-cluster">
+      <div class="rank-chip" id="rankChip">
+        <span class="rank-label" id="rankLabel">CP</span>
+        <div class="rank-track"><span id="rankBar" style="width:0%"></span></div>
+        <span class="rank-next" id="rankNext"></span>
+      </div>
+      <div class="stamp" id="starStamp" title="Étoiles gagnées">★ 0</div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <section class="page" data-screen="home">
+    <div class="page-head">
+      <p class="eyebrow">Mes listes de mots</p>
+      <h2 class="page-title">Choisis une liste pour t'entraîner</h2>
+      <p class="lede">Chaque liste correspond aux mots que ton maître ou ta maîtresse t'a donnés à apprendre pour la dictée.</p>
+    </div>
+    <div class="lists" id="listsContainer"></div>
+    <div class="row-actions" style="margin-top:16px;">
+      <button class="btn btn-primary" id="btnNewList">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Nouvelle liste
+      </button>
+      <button class="btn btn-ghost" id="btnMistakesGlobal">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M4 4h9l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M7 9h6M7 12h6M7 15h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Carnet d'erreurs
+      </button>
+    </div>
+    <div class="settings">
+      <span>Réglage parent : un mot est acquis après</span>
+      <div class="stepper">
+        <button type="button" id="targetMinus" aria-label="Diminuer">−</button>
+        <output id="targetValue" aria-live="polite">3</output>
+        <button type="button" id="targetPlus" aria-label="Augmenter">+</button>
+      </div>
+      <span id="targetRange">exercices réussis</span>
+    </div>
+    <div class="settings" style="margin-top:10px;border-top:none;padding-top:0;">
+      <span>Profil :</span><strong id="profileName">eleve</strong>
+      <button type="button" class="btn btn-ghost" id="btnProfile" style="padding:5px 12px;font-size:.82rem;">Changer</button>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="page" data-screen="dashboard">
+    <button class="backlink" data-back="home">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Mes listes
+    </button>
+    <div class="page-head">
+      <p class="eyebrow" id="dashCount"></p>
+      <h2 class="page-title" id="dashTitle"></h2>
+      <p class="lede">Choisis un jeu pour réviser cette liste. Tu peux changer de jeu à tout moment.</p>
+    </div>
+    <div class="score-block">
+      <div class="score-top"><span class="score-label">Progression de la liste</span><span class="score-pct" id="dashScorePct">0 %</span></div>
+      <div class="score-track"><span id="dashScoreBar" style="width:0%"></span></div>
+      <p class="score-detail" id="dashScoreDetail"></p>
+    </div>
+    <div class="seg" role="group" aria-label="Type d'entraînement">
+      <button type="button" class="seg-btn" id="segLearn" aria-pressed="true">À apprendre</button>
+      <button type="button" class="seg-btn" id="segAll" aria-pressed="false">Tout revoir</button>
+    </div>
+    <p class="unlock-hint" id="dashModeHint"></p>
+    <div class="modes" id="modesContainer"></div>
+    <div class="words-panel" id="wordsPanel"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section class="page" data-screen="flash">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="flashProgressLabel">1 / 6</span><div class="track"><span id="flashProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="flashStage"></div>
+  </section>
+
+  <!-- DICTEE -->
+  <section class="page" data-screen="dictee">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="dicteeProgressLabel">1 / 6</span><div class="track"><span id="dicteeProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="dicteeStage"></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="page" data-screen="quiz">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="quizProgressLabel">1 / 6</span><div class="track"><span id="quizProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="quizStage"></div>
+  </section>
+
+  <!-- LETTRES MÊLÉES -->
+  <section class="page" data-screen="scramble">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="scrambleProgressLabel">1 / 6</span><div class="track"><span id="scrambleProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="scrambleStage"></div>
+  </section>
+
+  <!-- MEMORY -->
+  <section class="page" data-screen="memory">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="memoryProgressLabel">0 / 6</span><div class="track"><span id="memoryProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="memoryStage"></div>
+  </section>
+
+  <!-- MOTS MÊLÉS -->
+  <section class="page" data-screen="wordsearch">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="wordsearchProgressLabel">0 / 6</span><div class="track"><span id="wordsearchProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="wordsearchStage"></div>
+  </section>
+
+  <!-- LE COFFRE-FORT -->
+  <section class="page" data-screen="safe">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="safeProgressLabel">1 / 6</span><div class="track"><span id="safeProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="safeStage"></div>
+  </section>
+
+  <!-- LE PENDU -->
+  <section class="page" data-screen="hangman">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="hangmanProgressLabel">1 / 6</span><div class="track"><span id="hangmanProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="hangmanStage"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="page" data-screen="results">
+    <div class="page-head" style="text-align:center;">
+      <p class="eyebrow">Résultat de la manche</p>
+      <h2 class="page-title" id="resultsTitle">Bien joué !</h2>
+    </div>
+    <div class="levelup-banner" id="levelupBanner" hidden></div>
+    <div class="results-stamp">
+      <svg class="big-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.2l7.1-.6L12 2z"/></svg>
+      <div class="tally" id="resultsTally">+0 étoiles</div>
+    </div>
+    <div class="results-list" id="resultsList"></div>
+    <p class="results-score" id="resultsScore"></p>
+    <div class="row-actions">
+      <button class="btn btn-primary" id="btnResultsAgain">Refaire une manche</button>
+      <button class="btn btn-ghost" id="btnResultsDone">Retour au tableau de bord</button>
+    </div>
+  </section>
+
+  <!-- EDITOR -->
+  <section class="page" data-screen="editor">
+    <button class="backlink" data-back="home">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Mes listes
+    </button>
+    <div class="page-head">
+      <p class="eyebrow" id="editorEyebrow">Nouvelle liste</p>
+      <h2 class="page-title">Compose ta liste de mots</h2>
+    </div>
+    <form id="editorForm">
+      <div class="field">
+        <label for="listName">Nom de la liste</label>
+        <input type="text" id="listName" placeholder="Ex. Dictée du 12 septembre" required>
+      </div>
+      <div class="field">
+        <label for="listWords">Mots à apprendre</label>
+        <span class="hint">Un mot par ligne, 6 minimum (une manche complète va jusqu'à 10). Ajoute une phrase d'exemple après un point-virgule : <em>maison ; Ma maison a un grand jardin.</em></span>
+        <textarea id="listWords" placeholder="aujourd'hui ; Aujourd'hui, nous allons à la piscine.&#10;beaucoup&#10;difficile ; Cet exercice est difficile."></textarea>
+        <span class="hint" id="wordCountHint"></span>
+      </div>
+      <div class="field" id="declPanel">
+        <label>Décliner les mots</label>
+        <span class="hint">Génère les formes liées aux mots de la liste (pluriel, féminin, conjugaison) pour les ajouter à la dictée.</span>
+        <div class="decl-opts">
+          <label class="decl-check"><input type="checkbox" id="declNombre" checked> Pluriel / singulier</label>
+          <label class="decl-check"><input type="checkbox" id="declGenre"> Féminin / masculin</label>
+          <label class="decl-check"><input type="checkbox" id="declConj"> Conjugaison</label>
+        </div>
+        <div class="decl-opts" id="declTemps" hidden></div>
+        <div><button type="button" class="btn btn-ghost" id="btnDecline">Proposer des formes</button></div>
+        <span class="hint" id="declStatus"></span>
+        <div id="declResults"></div>
+      </div>
+      <div class="row-actions" style="justify-content:flex-start;">
+        <button type="submit" class="btn btn-primary">Enregistrer la liste</button>
+        <button type="button" class="btn btn-danger" id="btnDeleteList" style="display:none;">Supprimer cette liste</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- MISTAKES NOTEBOOK -->
+  <section class="page" data-screen="mistakesBook">
+    <button class="backlink" data-back="home">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Mes listes
+    </button>
+    <div class="page-head">
+      <p class="eyebrow">Carnet d'erreurs</p>
+      <h2 class="page-title">Les mots à revoir en priorité</h2>
+      <p class="lede">Toutes les listes confondues, voici les mots que tu écris le moins bien pour l'instant.</p>
+    </div>
+    <div class="mistakes-list" id="mistakesBookList"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'cahierMalin_v1_' + (function(){ try{ return localStorage.getItem('cahierMalin_profil') || 'eleve'; }catch(e){ return 'eleve'; } })();
+  var ROUND_SIZE = 10;
+  var MIN_LIST_WORDS = 6;
+
+  var ICON_SPEAKER = '<svg viewBox="0 0 20 20" fill="none"><path d="M4 8v4a1 1 0 0 0 1 1h2l4 3V4L7 7H5a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 7.5c.9.7.9 4.3 0 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var ICON_REPLAY = '<svg viewBox="0 0 20 20" fill="none"><path d="M15 10a5 5 0 1 1-1.6-3.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M15 4v3.5H11.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5 8 14l8-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_CROSS = '<svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5 5 15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+  var ICON_FLASH = '<svg viewBox="0 0 20 20" fill="none"><path d="M4 6h12v9H4z" stroke="currentColor" stroke-width="1.6"/><path d="M4 6l6 4 6-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_QUIZ = '<svg viewBox="0 0 20 20" fill="none"><path d="M10 13v-.5c0-1 .6-1.4 1.3-1.9.7-.5 1.2-1 1.2-1.9A2.5 2.5 0 0 0 10 6.2 2.5 2.5 0 0 0 7.5 8.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="15.5" r=".9" fill="currentColor"/></svg>';
+  var ICON_SCRAMBLE = '<svg viewBox="0 0 20 20" fill="none"><path d="M3 6h3l8 8h3M3 14h3l3-3M14 6h3M17 6l-2.3-2M17 6l-2.3 2M17 14l-2.3-2M17 14l-2.3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_HANGMAN = '<svg viewBox="0 0 20 20" fill="none"><path d="M4 17h5M6.5 17V3M6.5 3h6.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="13" cy="8.3" r="1.7" stroke="currentColor" stroke-width="1.6"/><path d="M13 10v3.5M11.2 12l1.8.8 1.8-.8M11.6 17l1.4-2 1.4 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var ICON_SAFE = '<svg viewBox="0 0 20 20" fill="none"><rect x="3" y="3.5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="9.5" r="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M6 15.5V17M14 15.5V17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var ICON_MEMORY ='<svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="5.5" width="8" height="11" rx="1.6" stroke="currentColor" stroke-width="1.6"/><rect x="9.5" y="3.5" width="8" height="11" rx="1.6" stroke="currentColor" stroke-width="1.6" fill="var(--surface)"/><path d="M13.5 7.5v3M12 9h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var ICON_WORDSEARCH = '<svg viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M12.3 12.3 17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 8.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var ICON_RIBBON = '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 11 6 18l4-2 4 2-1.5-7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+
+  /* ---------------- default data ---------------- */
+  function defaultLists(){
+    return [{
+      id:'exemple',
+      name:"Liste d'exemple (CE2-CM1)",
+      words:[
+        {w:"aujourd'hui", s:"Aujourd'hui, nous allons visiter le musée."},
+        {w:"beaucoup", s:"Il y avait beaucoup de monde sur la plage."},
+        {w:"toujours", s:"Elle arrive toujours en avance à l'école."},
+        {w:"quelquefois", s:"Quelquefois, il neige encore en avril."},
+        {w:"difficile", s:"Cet exercice de mathématiques est difficile."},
+        {w:"une hirondelle", s:"Une hirondelle a fait son nid sous le toit."},
+        {w:"intéressant", s:"Ce livre est vraiment intéressant."},
+        {w:"environ", s:"Le village se trouve à environ dix kilomètres."},
+        {w:"ensemble", s:"Nous avons préparé le gâteau ensemble."},
+        {w:"tout à coup", s:"Tout à coup, le ciel est devenu noir."},
+        {w:"un exercice", s:"Le maître a distribué un nouvel exercice."},
+        {w:"longtemps", s:"Nous avons attendu longtemps sous la pluie."}
+      ]
+    }];
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var s = JSON.parse(raw);
+        s.lists = s.lists || defaultLists();
+        s.progress = s.progress || {};
+        s.stars = s.stars || 0;
+        s.settings = s.settings || {};
+        if(!s.settings.target) s.settings.target = 3;
+        s.gradeFloors = s.gradeFloors || {};
+        return s;
+      }
+    }catch(e){}
+    return { lists:defaultLists(), progress:{}, stars:0, settings:{ target:3 }, gradeFloors:{} };
+  }
+  /* Le serveur (SQLite) garde les listes et la progression par profil ; le navigateur
+     en garde une copie pour fonctionner hors ligne. */
+  var serverLoaded = false, saveTimer = null;
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    if(!serverLoaded) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(pushState, 400);
+  }
+  function profileName(){
+    try{ return localStorage.getItem('cahierMalin_profil') || 'eleve'; }catch(e){ return 'eleve'; }
+  }
+  function apiFetch(path, opts){
+    opts = opts || {};
+    opts.headers = Object.assign({ 'Content-Type':'application/json', 'X-Profil': encodeURIComponent(profileName()) }, opts.headers || {});
+    return fetch(path, opts).then(function(r){
+      if(!r.ok) return r.json().catch(function(){ return {}; }).then(function(j){ throw new Error(j.error || 'Erreur serveur'); });
+      return r.json();
+    });
+  }
+  function pushState(){
+    return apiFetch('api/state', { method:'PUT', body: JSON.stringify(state) }).catch(function(){ toast('Enregistré sur cet appareil seulement (serveur injoignable).'); });
+  }
+  function syncFromServer(){
+    serverLoaded = false;
+    return apiFetch('api/state').then(function(s){
+      if(s.exists){
+        state = { lists:s.lists, progress:s.progress || {}, stars:s.stars || 0, settings:s.settings || {}, gradeFloors:s.gradeFloors || {} };
+        if(!state.settings.target) state.settings.target = 3;
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+      }
+      serverLoaded = true;
+      if(!s.exists) return pushState();
+    }).then(function(){
+      $('#targetValue').textContent = targetCount();
+      updateStarStamp(); renderHome();
+      if(nav.screen !== 'home') goto('home');
+    }).catch(function(){});
+  }
+
+  var state = loadState();
+  var nav = { screen:'home', listId:null, mode:null, kind:'learn', reviewAll:false, round:[], idx:0, results:[], stage:'look', startGradeIdx:0 };
+
+  /* ---------------- grades & progression ---------------- */
+  /* Chaque liste a son propre score en % et son propre grade : 100 % seulement
+     quand chaque mot de la liste est acquis. Un grade atteint n'est jamais perdu,
+     même si l'on ajoute des mots à la liste ensuite. */
+  var MODE_IDS = ['flash','quiz','memory','wordsearch','scramble','safe','hangman','dictee'];
+  var GRADES = [
+    { key:'cp', label:'CP', pct:0 },
+    { key:'ce1', label:'CE1', pct:12 },
+    { key:'ce2', label:'CE2', pct:28 },
+    { key:'cm1', label:'CM1', pct:45 },
+    { key:'cm2', label:'CM2', pct:65 },
+    { key:'6e', label:'6ème', pct:85 },
+    { key:'diplome', label:'Champion de dictée', pct:100 }
+  ];
+  var MODE_DEFS = [
+    { id:'flash', title:'Cache-cache', desc:"Regarde le mot, cache-le, écris-le de mémoire.", icon:ICON_FLASH },
+    { id:'quiz', title:'Quiz éclair', desc:"Choisis la bonne orthographe parmi 4 propositions.", icon:ICON_QUIZ },
+    { id:'memory', title:'Memory', desc:"Retrouve chaque mot écrit et sa version audio.", icon:ICON_MEMORY },
+    { id:'wordsearch', title:'Mots mêlés', desc:"Retrouve les mots cachés dans la grille de lettres.", icon:ICON_WORDSEARCH },
+    { id:'scramble', title:'Lettres mêlées', desc:"Remets les lettres mélangées dans le bon ordre.", icon:ICON_SCRAMBLE },
+    { id:'safe', title:'Le Coffre-fort', desc:"Écoute le mot, tourne les molettes pour composer le code et ouvre le coffre.", icon:ICON_SAFE },
+    { id:'hangman', title:'Le Pendu', desc:"Devine le mot lettre par lettre avant la fin du dessin.", icon:ICON_HANGMAN },
+    { id:'dictee', title:'Dictée audio', desc:"Écoute le mot puis écris-le, sans aucune aide visuelle : la vraie dictée.", icon:ICON_SPEAKER }
+  ];
+  function targetCount(){
+    var t = parseInt(state.settings && state.settings.target, 10) || 3;
+    return Math.max(1, Math.min(MODE_IDS.length, t));
+  }
+  function peekProgress(listId, word){
+    return (state.progress[listId] && state.progress[listId][word]) || null;
+  }
+  function successCount(listId, word){
+    var p = peekProgress(listId, word);
+    return p && p.modes ? Object.keys(p.modes).length : 0;
+  }
+  function isAcquired(listId, word){ return successCount(listId, word) >= targetCount(); }
+  function scoreOfLists(lists){
+    var X = targetCount(), pts = 0, max = 0;
+    lists.forEach(function(l){
+      max += l.words.length * X;
+      l.words.forEach(function(w){ pts += Math.min(successCount(l.id, w.w), X); });
+    });
+    return { pts:pts, max:max, pct: max ? Math.floor(pts / max * 100) : 0 };
+  }
+  function currentGradeIdx(listId){
+    var list = getList(listId);
+    if(!list) return 0;
+    var pct = scoreOfLists([list]).pct, idx = 0;
+    for(var i=0;i<GRADES.length;i++){ if(pct >= GRADES[i].pct) idx = i; }
+    var floor = state.gradeFloors[listId] || 0;
+    if(idx > floor){ state.gradeFloors[listId] = idx; saveState(); floor = idx; }
+    return Math.max(idx, floor);
+  }
+  var LIST_SCREENS = ['dashboard','flash','dictee','quiz','memory','wordsearch','scramble','safe','hangman','results'];
+  function updateRankChip(){
+    var chip = $('#rankChip');
+    var list = getList(nav.listId);
+    if(!list || LIST_SCREENS.indexOf(nav.screen) === -1){ chip.style.display = 'none'; return; }
+    chip.style.display = '';
+    var pct = scoreOfLists([list]).pct;
+    var idx = currentGradeIdx(list.id);
+    $('#rankLabel').textContent = GRADES[idx].label;
+    if(idx + 1 < GRADES.length){
+      var cur = GRADES[idx].pct, nxt = GRADES[idx+1].pct;
+      var bar = Math.max(0, Math.min(100, Math.round((pct - cur) / Math.max(1, nxt - cur) * 100)));
+      $('#rankBar').style.width = bar + '%';
+      $('#rankNext').textContent = pct + ' % · ' + GRADES[idx+1].label + ' à ' + nxt + ' %';
+    } else {
+      $('#rankBar').style.width = '100%';
+      $('#rankNext').textContent = 'Niveau maximum !';
+    }
+  }
+
+  /* ---------------- helpers ---------------- */
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function $all(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+  function el(tag, attrs, html){
+    var e = document.createElement(tag);
+    if(attrs) for(var k in attrs){ e.setAttribute(k, attrs[k]); }
+    if(html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+  function getList(id){ return state.lists.find(function(l){ return l.id===id; }); }
+  function wordProgress(listId, word){
+    if(!state.progress[listId]) state.progress[listId] = {};
+    if(!state.progress[listId][word]) state.progress[listId][word] = { attempts:0, lastWrong:false, wrongCount:0, modes:{} };
+    var p = state.progress[listId][word];
+    if(!p.modes) p.modes = {};
+    return p;
+  }
+  function wordStatus(listId, word){
+    if(isAcquired(listId, word)) return 'mastered';
+    var p = peekProgress(listId, word);
+    if(p && p.lastWrong) return 'practice';
+    return successCount(listId, word) > 0 ? 'progress' : 'new';
+  }
+  function wsClean(w){ return deaccent(w.toLowerCase()).replace(/[^a-z]/g, '').toUpperCase(); }
+  function canPlay(mode, w){
+    if(mode !== 'wordsearch') return true;
+    var n = wsClean(w.w).length;
+    return n >= 3 && n <= 12;
+  }
+  function roundSizeFor(mode){ return (mode === 'memory' || mode === 'wordsearch' || mode === 'safe') ? 6 : ROUND_SIZE; }
+  function eligibleWords(list, mode){
+    return list.words.filter(function(w){
+      if(!canPlay(mode, w)) return false;
+      if(isAcquired(list.id, w.w)) return false;
+      var p = peekProgress(list.id, w.w);
+      return !(p && p.modes && p.modes[mode]);
+    });
+  }
+  function toast(msg){
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._h);
+    toast._h = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+
+  /* ---------------- speech ---------------- */
+  var frVoice = null;
+  function refreshVoices(){
+    if(!window.speechSynthesis) return;
+    var voices = speechSynthesis.getVoices();
+    frVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('fr')===0; }) || null;
+  }
+  if(window.speechSynthesis){
+    refreshVoices();
+    speechSynthesis.onvoiceschanged = refreshVoices;
+  }
+  function speak(text){
+    if(!window.speechSynthesis){ toast("La lecture audio n'est pas disponible sur ce navigateur."); return; }
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'fr-FR';
+    u.rate = 0.85;
+    if(frVoice) u.voice = frVoice;
+    speechSynthesis.speak(u);
+  }
+
+  /* ---------------- diff (LCS-based) ---------------- */
+  function diffWords(correct, typed){
+    var a = correct.split(''), b = typed.split('');
+    var n=a.length, m=b.length;
+    var dp = [];
+    for(var i=0;i<=n;i++){ dp.push(new Array(m+1).fill(0)); }
+    for(i=n-1;i>=0;i--){
+      for(var j=m-1;j>=0;j--){
+        if(a[i].toLowerCase()===b[j].toLowerCase()) dp[i][j]=dp[i+1][j+1]+1;
+        else dp[i][j]=Math.max(dp[i+1][j],dp[i][j+1]);
+      }
+    }
+    var ops=[]; i=0; var jj=0;
+    while(i<n && jj<m){
+      if(a[i].toLowerCase()===b[jj].toLowerCase()){ ops.push({t:'equal',c:a[i]}); i++; jj++; }
+      else if(dp[i+1][jj] >= dp[i][jj+1]){ ops.push({t:'insert',c:a[i]}); i++; }
+      else { ops.push({t:'delete',c:b[jj]}); jj++; }
+    }
+    while(i<n){ ops.push({t:'insert',c:a[i]}); i++; }
+    while(jj<m){ ops.push({t:'delete',c:b[jj]}); jj++; }
+    return ops;
+  }
+  function renderDiff(ops){
+    return ops.map(function(op){
+      var cls = op.t==='equal' ? 'diff-equal' : (op.t==='insert' ? 'diff-insert' : 'diff-delete');
+      var ch = op.c===' ' ? ' ' : op.c;
+      return '<span class="'+cls+'">'+escapeHtml(ch)+'</span>';
+    }).join('');
+  }
+  function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  /* ---------------- distractor generation ---------------- */
+  var ACCENTS = {'é':'e','è':'e','ê':'e','à':'a','â':'a','ù':'u','û':'u','î':'i','ï':'i','ô':'o','ç':'c'};
+  function letterIdxs(word){
+    var idxs = [];
+    for(var i=0;i<word.length;i++){ if(/[a-zàâçéèêëîïôùûü]/i.test(word[i])) idxs.push(i); }
+    return idxs;
+  }
+  function mutateRemoveAccent(word){
+    for(var i=0;i<word.length;i++){
+      var lower = word[i].toLowerCase();
+      if(ACCENTS[lower]){
+        var repl = word[i]===lower ? ACCENTS[lower] : ACCENTS[lower].toUpperCase();
+        return word.slice(0,i)+repl+word.slice(i+1);
+      }
+    }
+    return null;
+  }
+  function mutateDoubleLetter(word){
+    var idxs = letterIdxs(word);
+    for(var k=0;k<idxs.length;k++){
+      var i = idxs[Math.floor(Math.random()*idxs.length)];
+      if(word[i+1] && word[i+1].toLowerCase()===word[i].toLowerCase()){
+        return word.slice(0,i)+word.slice(i+1); // undouble
+      }
+    }
+    var i2 = idxs[Math.floor(Math.random()*idxs.length)];
+    return word.slice(0,i2+1)+word[i2]+word.slice(i2+1); // double
+  }
+  function mutateDropLastLetter(word){
+    var m = word.match(/([a-zàâéèêç])$/i);
+    if(m && word.length>3) return word.slice(0,-1);
+    return null;
+  }
+  function mutateSwapAdjacent(word){
+    var idxs = letterIdxs(word);
+    if(idxs.length<2) return null;
+    var pos = Math.floor(Math.random()*(idxs.length-1));
+    var i = idxs[pos], j = idxs[pos+1];
+    var chars = word.split('');
+    var t = chars[i]; chars[i]=chars[j]; chars[j]=t;
+    return chars.join('');
+  }
+  function makeDistractors(word, count){
+    var pool = [];
+    var mutators = [mutateRemoveAccent, mutateDoubleLetter, mutateDropLastLetter, mutateSwapAdjacent, mutateSwapAdjacent];
+    var tries = 0;
+    while(pool.length < count && tries < 30){
+      tries++;
+      var fn = mutators[Math.floor(Math.random()*mutators.length)];
+      var cand = fn(word);
+      if(cand && cand.toLowerCase() !== word.toLowerCase() && pool.indexOf(cand) === -1){
+        pool.push(cand);
+      }
+    }
+    var fallbackTries = 0;
+    while(pool.length < count && fallbackTries < 20){
+      fallbackTries++;
+      var cand2 = mutateSwapAdjacent(word + (fallbackTries%2? 's':''));
+      if(cand2 && cand2.toLowerCase()!==word.toLowerCase() && pool.indexOf(cand2)===-1) pool.push(cand2);
+    }
+    return pool.slice(0, count);
+  }
+
+  /* ---------------- rendering: HOME ---------------- */
+  function renderHome(){
+    var box = $('#listsContainer');
+    box.innerHTML = '';
+    if(state.lists.length === 0){
+      box.appendChild(el('div',{class:'empty'}, "Tu n'as pas encore de liste. Crée ta première liste de mots pour commencer à t'entraîner !"));
+      return;
+    }
+    state.lists.forEach(function(list){
+      var total = list.words.length;
+      var mastered = list.words.filter(function(w){ return isAcquired(list.id, w.w); }).length;
+      var pct = scoreOfLists([list]).pct;
+      var card = el('div',{class:'list-card'});
+      var info = el('div',{class:'info'});
+      info.appendChild(el('h3',{}, escapeHtml(list.name)));
+      var meta = el('div',{class:'meta'});
+      meta.appendChild(document.createTextNode(total+' mot'+(total>1?'s':'')+' · '+mastered+'/'+total+' acquis · '+pct+' % · '+GRADES[currentGradeIdx(list.id)].label));
+      var bar = el('div',{class:'mastery-bar'}); var span = el('span',{style:'width:'+pct+'%'}); bar.appendChild(span);
+      meta.appendChild(bar);
+      info.appendChild(meta);
+      card.appendChild(info);
+      var actions = el('div',{class:'actions'});
+      var studyBtn = el('button',{class:'icon-btn', title:'Étudier'}, '<svg viewBox="0 0 20 20" fill="none"><path d="M6 4l9 6-9 6V4z" fill="currentColor"/></svg>');
+      studyBtn.addEventListener('click', function(){ openDashboard(list.id); });
+      var editBtn = el('button',{class:'icon-btn', title:'Modifier'}, '<svg viewBox="0 0 20 20" fill="none"><path d="M4 16l.7-3L13 4.7a1.5 1.5 0 0 1 2.1 0l.2.2a1.5 1.5 0 0 1 0 2.1L7 15.3 4 16Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>');
+      editBtn.addEventListener('click', function(){ openEditor(list.id); });
+      actions.appendChild(studyBtn);
+      actions.appendChild(editBtn);
+      card.appendChild(actions);
+      box.appendChild(card);
+    });
+  }
+
+  /* ---------------- dashboard ---------------- */
+  function openDashboard(listId){
+    nav.listId = listId;
+    var list = getList(listId);
+    $('#dashTitle').textContent = list.name;
+    $('#dashCount').textContent = list.words.length + ' mot' + (list.words.length>1?'s':'');
+    renderDashboard();
+    goto('dashboard');
+  }
+
+  function renderDashboard(){
+    var list = getList(nav.listId);
+    var X = targetCount();
+    var sc = scoreOfLists([list]);
+    var acquiredN = list.words.filter(function(w){ return isAcquired(list.id, w.w); }).length;
+    $('#dashScorePct').textContent = sc.pct + ' %';
+    $('#dashScoreBar').style.width = sc.pct + '%';
+    $('#dashScoreDetail').textContent = acquiredN + ' mot' + (acquiredN>1?'s':'') + ' acquis sur ' + list.words.length + '. Un mot est acquis quand il est réussi dans ' + X + ' exercice' + (X>1?'s':'') + ' différent' + (X>1?'s':'') + '.';
+    $('#segLearn').setAttribute('aria-pressed', nav.reviewAll ? 'false' : 'true');
+    $('#segAll').setAttribute('aria-pressed', nav.reviewAll ? 'true' : 'false');
+    $('#dashModeHint').textContent = nav.reviewAll
+      ? 'Tous les mots sont proposés, même ceux déjà acquis. Ta progression ne change pas.'
+      : 'Seuls les mots pas encore réussis dans chaque exercice sont proposés.';
+    renderModesGrid(list.id);
+    renderWordsPanel(list);
+  }
+
+  function renderModesGrid(listId){
+    var list = getList(listId);
+    var box = $('#modesContainer');
+    box.innerHTML = '';
+    MODE_DEFS.forEach(function(def){
+      var disabled, meta;
+      if(nav.reviewAll){
+        var playN = list.words.filter(function(w){ return canPlay(def.id, w); }).length;
+        disabled = playN === 0;
+        meta = playN ? ('Tous les mots (' + playN + ')') : 'Mots trop longs pour la grille';
+      } else {
+        var n = eligibleWords(list, def.id).length;
+        disabled = n === 0;
+        meta = n ? (n + ' mot' + (n>1?'s':'') + ' à faire') : 'Tout réussi ici !';
+      }
+      var card = el('button',{class:'mode-card', type:'button'});
+      if(disabled) card.setAttribute('disabled','true');
+      card.innerHTML = '<div class="ic">'+def.icon+'</div><h4>'+escapeHtml(def.title)+'</h4><p>'+escapeHtml(def.desc)+'</p><span class="mode-meta">'+escapeHtml(meta)+'</span>';
+      if(!disabled){
+        card.addEventListener('click', function(){ startMode(def.id, nav.reviewAll ? 'review' : 'learn'); });
+      }
+      box.appendChild(card);
+    });
+  }
+
+  function renderWordsPanel(list){
+    var X = targetCount();
+    var panel = $('#wordsPanel');
+    panel.innerHTML = '';
+    var todo = [], done = [];
+    list.words.forEach(function(w){ (isAcquired(list.id, w.w) ? done : todo).push(w); });
+    function addGroup(title, words, emptyText){
+      var group = el('div');
+      group.appendChild(el('h3',{class:'wg-title'}, escapeHtml(title)+' <span class="wg-count">'+words.length+'</span>'));
+      if(!words.length){ group.appendChild(el('p',{class:'wg-empty'}, emptyText)); }
+      var chips = el('div',{class:'word-chips'});
+      words.forEach(function(w){
+        var status = wordStatus(list.id, w.w);
+        var count = Math.min(successCount(list.id, w.w), X);
+        var p = peekProgress(list.id, w.w);
+        var doneModes = MODE_DEFS.filter(function(m){ return p && p.modes && p.modes[m.id]; }).map(function(m){ return m.title; });
+        var chip = el('button',{class:'chip'+(status==='mastered'?' is-acquired':'')+(status==='practice'?' is-practice':''), type:'button'});
+        chip.title = doneModes.length ? 'Réussi dans : ' + doneModes.join(', ') : 'Pas encore réussi';
+        chip.setAttribute('aria-label', w.w + ', réussi dans ' + count + ' exercice' + (count>1?'s':'') + ' sur ' + X);
+        var pips = '';
+        for(var i=0;i<X;i++){ pips += '<span class="pip'+(i<count?' on':'')+'"></span>'; }
+        chip.innerHTML = (status==='mastered' ? ICON_CHECK.replace('<svg','<svg class="check"') : '') + '<span>'+escapeHtml(w.w)+'</span><span class="pips">'+pips+'</span>';
+        chip.addEventListener('click', function(){ speak(w.s || w.w); });
+        chips.appendChild(chip);
+      });
+      group.appendChild(chips);
+      panel.appendChild(group);
+    }
+    addGroup('À apprendre', todo, 'Bravo, tous les mots sont acquis !');
+    addGroup('Acquis', done, "Aucun mot acquis pour l'instant.");
+  }
+
+  /* ---------------- round setup ---------------- */
+  function pickRound(listId, mode, kind){
+    var list = getList(listId);
+    if(kind === 'review'){
+      return shuffle(list.words.filter(function(w){ return canPlay(mode, w); })).slice(0, roundSizeFor(mode));
+    }
+    var words = eligibleWords(list, mode);
+    var order = {practice:0, new:1, progress:1, mastered:2};
+    words.sort(function(a,b){ return order[wordStatus(listId,a.w)] - order[wordStatus(listId,b.w)]; });
+    return shuffle(words.slice(0, roundSizeFor(mode)));
+  }
+
+  function startMode(mode, kind){
+    nav.mode = mode;
+    nav.kind = kind;
+    nav.round = pickRound(nav.listId, mode, kind);
+    if(!nav.round.length){ toast('Plus aucun mot à travailler ici.'); openDashboard(nav.listId); return; }
+    nav.idx = 0;
+    nav.results = [];
+    nav.startGradeIdx = currentGradeIdx(nav.listId);
+    if(mode==='flash') { goto('flash'); renderFlash(); }
+    else if(mode==='dictee') { goto('dictee'); renderDictee(); }
+    else if(mode==='quiz') { goto('quiz'); renderQuiz(); }
+    else if(mode==='scramble') { goto('scramble'); renderScramble(); }
+    else if(mode==='hangman') { goto('hangman'); renderHangman(); }
+    else if(mode==='memory') { goto('memory'); renderMemory(); }
+    else if(mode==='wordsearch') { goto('wordsearch'); renderWordsearch(); }
+    else if(mode==='safe') { goto('safe'); renderSafe(); }
+  }
+
+  function recordAttempt(word, correct){
+    var p = wordProgress(nav.listId, word);
+    var wasAcquired = isAcquired(nav.listId, word);
+    if(nav.kind === 'learn'){
+      p.attempts++;
+      if(correct){ p.lastWrong = false; p.modes[nav.mode] = true; }
+      else { p.lastWrong = true; p.wrongCount = (p.wrongCount||0)+1; }
+    }
+    if(correct){ state.stars++; }
+    nav.results.push({ word:word, correct:correct, acquired: !wasAcquired && isAcquired(nav.listId, word) });
+    saveState();
+    updateStarStamp();
+  }
+
+  function updateStarStamp(){
+    $('#starStamp').innerHTML = '★ ' + state.stars;
+    updateRankChip();
+  }
+
+  function finishRound(){
+    var okCount = nav.results.filter(function(r){ return r.correct; }).length;
+    var bonus = (okCount === nav.results.length && nav.results.length>0) ? 2 : 0;
+    if(bonus){ state.stars += bonus; updateStarStamp(); saveState(); }
+    $('#resultsTitle').textContent = okCount===nav.results.length ? 'Sans faute, bravo !' : 'Bien joué !';
+    $('#resultsTally').textContent = '+' + (okCount+bonus) + ' étoile' + ((okCount+bonus)>1?'s':'');
+    var list = $('#resultsList'); list.innerHTML = '';
+    nav.results.forEach(function(r){
+      var row = el('div',{class:'results-row '+(r.correct?'ok':'no')});
+      row.innerHTML = '<span class="w">'+escapeHtml(r.word)+'</span><span class="row-right">' + (r.acquired ? '<span class="tag-acq">acquis</span>' : '') + (r.correct ? ICON_CHECK : ICON_CROSS) + '</span>';
+      list.appendChild(row);
+    });
+    var sc = scoreOfLists([getList(nav.listId)]);
+    $('#resultsScore').textContent = nav.kind === 'learn'
+      ? 'Progression de la liste : ' + sc.pct + ' %'
+      : 'Manche de révision : ta progression n\'a pas changé (' + sc.pct + ' %).';
+    var newGradeIdx = currentGradeIdx(nav.listId);
+    var banner = $('#levelupBanner');
+    if(newGradeIdx > nav.startGradeIdx){
+      var newGrade = GRADES[newGradeIdx];
+      banner.hidden = false;
+      banner.innerHTML = ICON_RIBBON + '<span>Bravo, tu passes en <strong>'+escapeHtml(newGrade.label)+'</strong> !</span>';
+    } else {
+      banner.hidden = true;
+    }
+    goto('results');
+  }
+
+  /* ---------------- FLASHCARDS ---------------- */
+  function renderFlash(){
+    var stage = $('#flashStage');
+    if(nav.idx >= nav.round.length){ finishRound(); return; }
+    var item = nav.round[nav.idx];
+    updateProgress('flash');
+    nav.stage = 'look';
+    paintFlashLook(item);
+  }
+  function paintFlashLook(item){
+    var stage = $('#flashStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('div',{class:'word-display'}, escapeHtml(item.w)));
+    if(item.s) stage.appendChild(el('div',{class:'sentence-display'}, escapeHtml(item.s)));
+    var btn = el('button',{class:'btn btn-primary btn-lg'}, 'Je suis prêt, cache le mot');
+    btn.addEventListener('click', function(){ paintFlashWrite(item); });
+    stage.appendChild(btn);
+  }
+  function paintFlashWrite(item){
+    var stage = $('#flashStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('div',{class:'hidden-word'}, '• '.repeat(item.w.replace(/\s/g,'').length).trim()));
+    if(item.s) stage.appendChild(el('div',{class:'sentence-display'}, escapeHtml(item.s.replace(new RegExp(escapeRegex(item.w),'i'), '_____'))));
+    var input = el('input',{class:'answer-input', type:'text', autocomplete:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Écris le mot ici', 'aria-label':'Ta réponse'});
+    stage.appendChild(input);
+    var btn = el('button',{class:'btn btn-primary btn-lg'}, 'Vérifier');
+    btn.addEventListener('click', function(){ paintFlashCheck(item, input.value); });
+    input.addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ paintFlashCheck(item, input.value); } });
+    stage.appendChild(btn);
+    input.focus();
+  }
+  function paintFlashCheck(item, typed){
+    typed = (typed||'').trim();
+    var correct = typed.toLowerCase() === item.w.toLowerCase();
+    recordAttempt(item.w, correct);
+    var stage = $('#flashStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
+    stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(item.w, typed || ' '))));
+    if(!correct) stage.appendChild(el('div',{class:'sentence-display'}, 'Le mot correct : ' + escapeHtml(item.w)));
+    var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
+    next.addEventListener('click', function(){ nav.idx++; renderFlash(); });
+    stage.appendChild(next);
+  }
+
+  /* ---------------- DICTEE AUDIO ---------------- */
+  function renderDictee(){
+    if(nav.idx >= nav.round.length){ finishRound(); return; }
+    var item = nav.round[nav.idx];
+    updateProgress('dictee');
+    paintDicteePrompt(item);
+  }
+  function paintDicteePrompt(item){
+    var stage = $('#dicteeStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('p',{class:'sentence-display'}, "Écoute bien et écris ce que tu entends."));
+    var listenBtn = el('button',{class:'speak-btn'}, ICON_SPEAKER + 'Écouter');
+    var toSpeak = item.s || item.w;
+    listenBtn.addEventListener('click', function(){ speak(toSpeak); });
+    stage.appendChild(listenBtn);
+    var replayBtn = el('button',{class:'speak-btn replay'}, ICON_REPLAY + 'Réécouter');
+    replayBtn.addEventListener('click', function(){ speak(toSpeak); });
+    stage.appendChild(replayBtn);
+    var input = el('input',{class:'answer-input', type:'text', autocomplete:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Écris le mot ici', 'aria-label':'Ta réponse'});
+    stage.appendChild(input);
+    var check = el('button',{class:'btn btn-primary btn-lg'}, 'Vérifier');
+    check.addEventListener('click', function(){ paintDicteeCheck(item, input.value); });
+    input.addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ paintDicteeCheck(item, input.value); } });
+    stage.appendChild(check);
+    speak(toSpeak);
+    setTimeout(function(){ input.focus(); }, 300);
+  }
+  function paintDicteeCheck(item, typed){
+    typed = (typed||'').trim();
+    var correct = typed.toLowerCase() === item.w.toLowerCase();
+    recordAttempt(item.w, correct);
+    var stage = $('#dicteeStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
+    stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(item.w, typed || ' '))));
+    if(item.s) stage.appendChild(el('div',{class:'sentence-display'}, escapeHtml(item.s)));
+    var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
+    next.addEventListener('click', function(){ nav.idx++; renderDictee(); });
+    stage.appendChild(next);
+  }
+
+  /* ---------------- QUIZ ---------------- */
+  function renderQuiz(){
+    if(nav.idx >= nav.round.length){ finishRound(); return; }
+    var item = nav.round[nav.idx];
+    updateProgress('quiz');
+    var stage = $('#quizStage');
+    stage.innerHTML = '';
+    if(item.s){
+      var blanked = item.s.replace(new RegExp(escapeRegex(item.w),'i'), '<span class="blank">&nbsp;</span>');
+      stage.appendChild(el('div',{class:'sentence-display'}, blanked));
+    } else {
+      stage.appendChild(el('p',{class:'sentence-display'}, 'Quelle est la bonne orthographe ?'));
+    }
+    var listenBtn = el('button',{class:'speak-btn replay'}, ICON_SPEAKER + 'Écouter le mot');
+    listenBtn.addEventListener('click', function(){ speak(item.w); });
+    stage.appendChild(listenBtn);
+
+    var distractors = makeDistractors(item.w, 3);
+    var options = shuffle([item.w].concat(distractors));
+    var grid = el('div',{class:'quiz-options'});
+    var answered = false;
+    options.forEach(function(opt){
+      var b = el('button',{class:'quiz-opt', type:'button'}, escapeHtml(opt));
+      b.addEventListener('click', function(){
+        if(answered) return;
+        answered = true;
+        var correct = opt === item.w;
+        recordAttempt(item.w, correct);
+        $all('.quiz-opt', grid).forEach(function(o){
+          o.setAttribute('disabled','true');
+          if(o.textContent === item.w) o.classList.add('correct');
+          else if(o === b) o.classList.add('wrong');
+        });
+        var next = el('button',{class:'btn btn-primary btn-lg', style:'margin-top:16px;'}, nav.idx+1 < nav.round.length ? 'Question suivante' : 'Voir le résultat');
+        next.addEventListener('click', function(){ nav.idx++; renderQuiz(); });
+        stage.appendChild(next);
+      });
+      grid.appendChild(b);
+    });
+    stage.appendChild(grid);
+  }
+
+  function updateProgress(mode){
+    var label = $('#'+mode+'ProgressLabel');
+    var bar = $('#'+mode+'ProgressBar');
+    label.textContent = (nav.idx+1) + ' / ' + nav.round.length;
+    bar.style.width = Math.round((nav.idx)/nav.round.length*100) + '%';
+  }
+
+  /* ---------------- LETTRES MÊLÉES ---------------- */
+  function renderScramble(){
+    if(nav.idx >= nav.round.length){ finishRound(); return; }
+    var item = nav.round[nav.idx];
+    updateProgress('scramble');
+    paintScramble(item);
+  }
+  function scrambleLetters(letters){
+    if(letters.length<=1) return letters.slice();
+    var attempt, tries=0, original=letters.map(function(l){return l.ch;}).join('');
+    do{
+      attempt = shuffle(letters);
+      tries++;
+    } while(attempt.map(function(l){return l.ch;}).join('')===original && tries<10);
+    return attempt;
+  }
+  function paintScramble(item){
+    var stage = $('#scrambleStage');
+    stage.innerHTML = '';
+    if(item.s) stage.appendChild(el('div',{class:'sentence-display'}, escapeHtml(item.s.replace(new RegExp(escapeRegex(item.w),'i'), '_____'))));
+    else stage.appendChild(el('p',{class:'sentence-display'}, 'Remets les lettres dans le bon ordre.'));
+
+    var tokens = item.w.split(' ');
+    var tokenStates = tokens.map(function(tok){
+      var letters = tok.split('').map(function(ch, i){ return { ch:ch, id:tok+'_'+i+'_'+Math.random(), used:false }; });
+      return { slots: new Array(letters.length).fill(null), tiles: scrambleLetters(letters) };
+    });
+
+    var wrap = el('div',{class:'scramble-wrap'});
+    stage.appendChild(wrap);
+    var checkBtn = el('button',{class:'btn btn-primary btn-lg'}, 'Vérifier');
+    checkBtn.setAttribute('disabled','true');
+    checkBtn.addEventListener('click', function(){
+      var typed = tokenStates.map(function(ts){ return ts.slots.map(function(s){ return s.ch; }).join(''); }).join(' ');
+      paintScrambleCheck(item, typed);
+    });
+
+    function checkComplete(){
+      var complete = tokenStates.every(function(ts){ return ts.slots.every(function(s){ return s!==null; }); });
+      if(complete) checkBtn.removeAttribute('disabled'); else checkBtn.setAttribute('disabled','true');
+    }
+    function renderBlocks(){
+      wrap.innerHTML = '';
+      tokenStates.forEach(function(ts){
+        var block = el('div',{class:'scramble-block'});
+        var slotsRow = el('div',{class:'scramble-slots'});
+        ts.slots.forEach(function(val, i){
+          var slot = el('button',{class:'scramble-slot'+(val?' filled':''), type:'button'}, val ? escapeHtml(val.ch) : '');
+          if(val){
+            slot.addEventListener('click', function(){
+              var tile = ts.tiles.find(function(t){ return t.id===val.id; });
+              tile.used = false;
+              ts.slots[i] = null;
+              renderBlocks();
+              checkComplete();
+            });
+          }
+          slotsRow.appendChild(slot);
+        });
+        var trayRow = el('div',{class:'scramble-tray'});
+        ts.tiles.forEach(function(tile){
+          var tileBtn = el('button',{class:'scramble-tile'+(tile.used?' used':''), type:'button'}, escapeHtml(tile.ch));
+          tileBtn.addEventListener('click', function(){
+            if(tile.used) return;
+            var freeIdx = ts.slots.indexOf(null);
+            if(freeIdx===-1) return;
+            ts.slots[freeIdx] = tile;
+            tile.used = true;
+            renderBlocks();
+            checkComplete();
+          });
+          trayRow.appendChild(tileBtn);
+        });
+        block.appendChild(slotsRow);
+        block.appendChild(trayRow);
+        wrap.appendChild(block);
+      });
+    }
+    renderBlocks();
+    stage.appendChild(checkBtn);
+  }
+  function paintScrambleCheck(item, typed){
+    var correct = typed.toLowerCase() === item.w.toLowerCase();
+    recordAttempt(item.w, correct);
+    var stage = $('#scrambleStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
+    stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(item.w, typed))));
+    if(!correct) stage.appendChild(el('div',{class:'sentence-display'}, 'Le mot correct : ' + escapeHtml(item.w)));
+    var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
+    next.addEventListener('click', function(){ nav.idx++; renderScramble(); });
+    stage.appendChild(next);
+  }
+
+  /* ---------------- LE COFFRE-FORT ---------------- */
+  var SAFE_ITEM = 34;
+  var SAFE_MAX_TRIES = 3;
+  var SAFE_BASE = 'aàâbcçdeéèêëfghiîïjklmnoôpqrstuùûüvwxyz'.split('');
+  var SAFE_SVG = '<svg viewBox="0 0 120 96" class="safe-svg" aria-hidden="true">'+
+    '<rect x="8" y="8" width="104" height="80" rx="10" fill="var(--surface)" stroke="currentColor" stroke-width="3"/>'+
+    '<rect x="18" y="18" width="84" height="60" rx="6" fill="none" stroke="currentColor" stroke-width="2"/>'+
+    '<g class="dial" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">'+
+      '<circle cx="60" cy="48" r="14"/><path d="M60 34v6M60 56v6M46 48h6M68 48h6"/></g>'+
+    '<path class="treasure" d="M60 28l5.5 12.6 13.5 1.2-10.2 9 3.1 13.4L60 57.2 48.1 64.2l3.1-13.4-10.2-9 13.5-1.2z" fill="var(--gold)" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"/>'+
+    '</svg>';
+  var ICON_CHEVRON_UP = '<svg viewBox="0 0 20 20" fill="none"><path d="M5 12.5 10 7.5l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_CHEVRON_DOWN = '<svg viewBox="0 0 20 20" fill="none"><path d="M5 7.5 10 12.5l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function isWheelChar(ch){ return /[a-zàâäçéèêëîïôöùûüÿœæ]/i.test(ch); }
+  function renderSafe(){
+    if(nav.idx >= nav.round.length){ finishRound(); return; }
+    updateProgress('safe');
+    paintSafe(nav.round[nav.idx]);
+  }
+  function paintSafe(item){
+    var stage = $('#safeStage');
+    stage.innerHTML = '';
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var noSpeech = !window.speechSynthesis;
+    var tries = 0, done = false;
+
+    var figure = el('div',{class:'safe-figure'}, SAFE_SVG);
+    stage.appendChild(figure);
+    var triesBox = el('div',{class:'safe-tries', role:'img'});
+    stage.appendChild(triesBox);
+    function paintTries(){
+      triesBox.innerHTML = '';
+      triesBox.setAttribute('aria-label', (SAFE_MAX_TRIES - tries) + ' essai(s) restant(s)');
+      for(var i=0;i<SAFE_MAX_TRIES;i++){ triesBox.appendChild(el('span',{class:'try'+(i<tries?' used':'')})); }
+    }
+    paintTries();
+
+    if(item.s){
+      stage.appendChild(el('div',{class:'sentence-display'}, escapeHtml(item.s).replace(new RegExp(escapeRegex(escapeHtml(item.w)),'i'), '<span class="blank">&nbsp;</span>')));
+    } else {
+      stage.appendChild(el('p',{class:'sentence-display'}, 'Compose le code : le mot à trouver.'));
+    }
+    if(noSpeech){
+      stage.appendChild(el('div',{class:'sentence-display'}, 'Audio indisponible. Le code est : <strong>' + escapeHtml(item.w) + '</strong>'));
+    } else {
+      var row = el('div',{class:'row-actions'});
+      var listen = el('button',{class:'speak-btn', type:'button'}, ICON_SPEAKER + 'Écouter le mot');
+      listen.addEventListener('click', function(){ speak(item.w); });
+      row.appendChild(listen);
+      if(item.s){
+        var listenS = el('button',{class:'speak-btn replay', type:'button'}, ICON_SPEAKER + 'Écouter la phrase');
+        listenS.addEventListener('click', function(){ speak(item.s); });
+        row.appendChild(listenS);
+      }
+      stage.appendChild(row);
+    }
+
+    var wheels = [];
+    var box = el('div',{class:'safe-wheels'});
+    var group = null;
+    function newGroup(){ group = el('div',{class:'wheel-group'}); box.appendChild(group); }
+    newGroup();
+    item.w.split('').forEach(function(ch){
+      if(ch === ' '){ newGroup(); return; }
+      if(!isWheelChar(ch)){ group.appendChild(el('span',{class:'wheel-static'}, escapeHtml(ch))); return; }
+      var want = ch.toLowerCase();
+      var options = SAFE_BASE.slice();
+      if(options.indexOf(want) === -1) options.push(want);
+      var w = { options:options, want:want, idx:Math.floor(Math.random()*options.length) };
+      var col = el('div',{class:'wheel'});
+      var up = el('button',{class:'wheel-btn', type:'button', tabindex:'-1', 'aria-label':'Lettre précédente'}, ICON_CHEVRON_UP);
+      var down = el('button',{class:'wheel-btn', type:'button', tabindex:'-1', 'aria-label':'Lettre suivante'}, ICON_CHEVRON_DOWN);
+      var frame = el('div',{class:'wheel-frame'});
+      var view = el('div',{class:'wheel-view', tabindex:'0', 'aria-label':'Molette de lettres'});
+      var list = el('div',{class:'wheel-list'});
+      options.forEach(function(o){ list.appendChild(el('div',{class:'wheel-item'}, escapeHtml(o))); });
+      view.appendChild(list);
+      frame.appendChild(view);
+      var light = el('span',{class:'wheel-light'});
+      col.appendChild(up); col.appendChild(frame); col.appendChild(down); col.appendChild(light);
+      group.appendChild(col);
+      w.view = view; w.light = light; w.items = list.children;
+      function currentIdx(){ return Math.max(0, Math.min(options.length-1, Math.round(view.scrollTop / SAFE_ITEM))); }
+      function markSel(){
+        for(var j=0;j<w.items.length;j++){ w.items[j].classList.toggle('sel', j === w.idx); }
+      }
+      w.read = function(){ w.idx = currentIdx(); markSel(); return options[w.idx]; };
+      view.addEventListener('scroll', function(){
+        var i = currentIdx();
+        if(i !== w.idx){ w.idx = i; markSel(); light.className = 'wheel-light'; }
+      });
+      up.addEventListener('click', function(){ view.scrollBy({ top:-SAFE_ITEM, behavior: reduce ? 'auto' : 'smooth' }); });
+      down.addEventListener('click', function(){ view.scrollBy({ top:SAFE_ITEM, behavior: reduce ? 'auto' : 'smooth' }); });
+      wheels.push(w);
+    });
+    stage.appendChild(box);
+    wheels.forEach(function(w){ w.view.scrollTop = w.idx * SAFE_ITEM; w.read(); });
+
+    var msg = el('p',{class:'safe-msg', 'aria-live':'polite'}, 'Tourne les molettes pour écrire le mot, puis ouvre le coffre.');
+    stage.appendChild(msg);
+    var actions = el('div',{class:'row-actions'});
+    var openBtn = el('button',{class:'btn btn-primary btn-lg', type:'button'}, 'Ouvrir le coffre');
+    actions.appendChild(openBtn);
+    stage.appendChild(actions);
+
+    function end(win){
+      done = true;
+      recordAttempt(item.w, win);
+      wheels.forEach(function(w){ w.view.style.pointerEvents = 'none'; w.view.tabIndex = -1; });
+      figure.classList.toggle('open', win);
+      msg.remove();
+      stage.insertBefore(el('div',{class:'feedback-banner '+(win?'ok':'no')}, (win?ICON_CHECK:ICON_CROSS) + (win ? 'Coffre ouvert, bravo !' : 'Coffre verrouillé')), box);
+      if(!win) stage.insertBefore(el('div',{class:'sentence-display'}, 'Le code était : <strong>' + escapeHtml(item.w) + '</strong>'), box);
+      actions.innerHTML = '';
+      var next = el('button',{class:'btn btn-primary btn-lg', type:'button'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
+      next.addEventListener('click', function(){ nav.idx++; renderSafe(); });
+      actions.appendChild(next);
+    }
+    openBtn.addEventListener('click', function(){
+      if(done) return;
+      var allOk = true;
+      wheels.forEach(function(w){
+        var ok = w.read() === w.want;
+        if(!ok) allOk = false;
+        w.light.className = 'wheel-light ' + (ok ? 'ok' : 'bad');
+      });
+      tries++;
+      paintTries();
+      if(allOk){ end(true); }
+      else if(tries >= SAFE_MAX_TRIES){ end(false); }
+      else {
+        var left = SAFE_MAX_TRIES - tries;
+        msg.textContent = 'Pas encore ! Vert = bonne lettre, rouge = à changer. Il reste ' + left + ' essai' + (left>1?'s':'') + '.';
+      }
+    });
+    if(!noSpeech) setTimeout(function(){ if(!done) speak(item.w); }, 250);
+  }
+
+  /* ---------------- MEMORY ---------------- */
+  var memoryToken = 0;
+  function setGameProgress(mode, done, total, unit){
+    $('#'+mode+'ProgressLabel').textContent = done + ' / ' + total + ' ' + unit;
+    $('#'+mode+'ProgressBar').style.width = Math.round(done / Math.max(1, total) * 100) + '%';
+  }
+  function renderMemory(){
+    var token = ++memoryToken;
+    var stage = $('#memoryStage');
+    stage.innerHTML = '';
+    var words = nav.round;
+    var total = words.length, matched = 0, open = [], locked = false;
+    var strikes = {};
+    words.forEach(function(w){ strikes[w.w] = 0; });
+    var noSpeech = !window.speechSynthesis;
+    var cards = [];
+    words.forEach(function(w, i){
+      cards.push({ pair:i, type:'word', item:w });
+      cards.push({ pair:i, type:'audio', item:w });
+    });
+    cards = shuffle(cards);
+    setGameProgress('memory', 0, total, 'paires');
+    stage.appendChild(el('p',{class:'sentence-display'}, 'Retourne deux cartes : un mot écrit et sa version audio forment une paire.'));
+    var grid = el('div',{class:'memory-grid'});
+    stage.appendChild(grid);
+
+    function finishMemory(){
+      words.forEach(function(w){ recordAttempt(w.w, strikes[w.w] <= 2); });
+      var weak = words.filter(function(w){ return strikes[w.w] > 2; });
+      stage.appendChild(el('div',{class:'feedback-banner ok'}, ICON_CHECK + 'Toutes les paires sont trouvées !'));
+      if(weak.length){
+        stage.appendChild(el('div',{class:'sentence-display'}, 'À revoir : ' + escapeHtml(weak.map(function(w){ return w.w; }).join(', '))));
+      }
+      var next = el('button',{class:'btn btn-primary btn-lg'}, 'Voir le résultat');
+      next.addEventListener('click', function(){ finishRound(); });
+      stage.appendChild(next);
+    }
+    function onFlip(c){
+      if(token !== memoryToken) return;
+      if(c.matched){ if(c.type==='audio') speak(c.item.w); return; }
+      if(locked || open.indexOf(c) !== -1) return;
+      c.el.classList.add('up');
+      c.el.setAttribute('aria-label', c.type==='word' ? c.item.w : 'Audio');
+      if(c.type==='audio') speak(c.item.w);
+      open.push(c);
+      if(open.length < 2) return;
+      var a = open[0], b = open[1];
+      if(a.pair === b.pair){
+        a.matched = b.matched = true;
+        a.el.classList.add('matched'); b.el.classList.add('matched');
+        open = [];
+        matched++;
+        setGameProgress('memory', matched, total, 'paires');
+        if(matched === total) finishMemory();
+      } else {
+        strikes[a.item.w]++; strikes[b.item.w]++;
+        locked = true;
+        setTimeout(function(){
+          if(token !== memoryToken) return;
+          a.el.classList.remove('up'); b.el.classList.remove('up');
+          open = []; locked = false;
+        }, 1000);
+      }
+    }
+    cards.forEach(function(c){
+      var front = c.type==='word' ? escapeHtml(c.item.w) : (noSpeech ? '<em>' + escapeHtml(c.item.w) + '</em>' : ICON_SPEAKER);
+      var b = el('button',{class:'mem-card', type:'button', 'aria-label':'Carte cachée'});
+      b.innerHTML = '<span class="mem-back">?</span><span class="mem-front">' + front + '</span>';
+      c.el = b;
+      b.addEventListener('click', function(){ onFlip(c); });
+      grid.appendChild(b);
+    });
+  }
+
+  /* ---------------- MOTS MÊLÉS ---------------- */
+  var WS_DIRS = [[0,1],[1,0],[1,1],[-1,1]];
+  var WS_FILL = 'AAAEEEIIOOUUBCDFGHLMNPRSTV';
+  function buildWordsearch(words){
+    var maxLen = Math.max.apply(null, words.map(function(w){ return wsClean(w.w).length; }));
+    var n = Math.max(8, maxLen);
+    var grid = [];
+    for(var r=0;r<n;r++){ grid.push(new Array(n).fill('')); }
+    var placed = [];
+    words.slice().sort(function(a,b){ return wsClean(b.w).length - wsClean(a.w).length; }).forEach(function(w){
+      var s = wsClean(w.w), ok = false;
+      for(var t=0; t<300 && !ok; t++){
+        var d = WS_DIRS[Math.floor(Math.random()*WS_DIRS.length)];
+        var r0 = Math.floor(Math.random()*n), c0 = Math.floor(Math.random()*n);
+        var r1 = r0 + d[0]*(s.length-1), c1 = c0 + d[1]*(s.length-1);
+        if(r1<0 || r1>=n || c1<0 || c1>=n) continue;
+        var fits = true, i;
+        for(i=0;i<s.length;i++){
+          var ch = grid[r0+d[0]*i][c0+d[1]*i];
+          if(ch !== '' && ch !== s[i]){ fits = false; break; }
+        }
+        if(!fits) continue;
+        var cells = [];
+        for(i=0;i<s.length;i++){ grid[r0+d[0]*i][c0+d[1]*i] = s[i]; cells.push([r0+d[0]*i, c0+d[1]*i]); }
+        placed.push({ item:w, str:s, cells:cells, found:false });
+        ok = true;
+      }
+    });
+    for(var rr=0;rr<n;rr++){
+      for(var cc=0;cc<n;cc++){
+        if(grid[rr][cc] === '') grid[rr][cc] = WS_FILL.charAt(Math.floor(Math.random()*WS_FILL.length));
+      }
+    }
+    return { n:n, grid:grid, placed:placed };
+  }
+  function renderWordsearch(){
+    var stage = $('#wordsearchStage');
+    stage.innerHTML = '';
+    var built = buildWordsearch(nav.round);
+    var n = built.n, placed = built.placed;
+    if(!placed.length){ toast('Impossible de créer la grille.'); openDashboard(nav.listId); return; }
+    var foundCount = 0, done = false, start = null, cur = null, dragging = false, anchor = null;
+    setGameProgress('wordsearch', 0, placed.length, 'mots');
+    stage.appendChild(el('p',{class:'sentence-display'}, "Glisse le doigt de la première à la dernière lettre d'un mot (ou touche ces deux lettres). Les mots peuvent aller en ligne, en colonne ou en diagonale."));
+    var wordsBox = el('div',{class:'ws-words'});
+    placed.forEach(function(p){ p.chip = el('span',{class:'ws-word'}, escapeHtml(p.item.w)); wordsBox.appendChild(p.chip); });
+    stage.appendChild(wordsBox);
+    var grid = el('div',{class:'ws-grid'});
+    grid.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+    var cellEls = [];
+    for(var r=0;r<n;r++){
+      var row = [];
+      for(var c=0;c<n;c++){
+        var cell = el('div',{class:'ws-cell'}, built.grid[r][c]);
+        cell.dataset.r = r; cell.dataset.c = c;
+        grid.appendChild(cell);
+        row.push(cell);
+      }
+      cellEls.push(row);
+    }
+    stage.appendChild(grid);
+    var actions = el('div',{class:'row-actions'});
+    var giveUp = el('button',{class:'btn btn-ghost', type:'button'}, 'Je passe');
+    actions.appendChild(giveUp);
+    stage.appendChild(actions);
+
+    function posOf(cell){ return [parseInt(cell.dataset.r,10), parseInt(cell.dataset.c,10)]; }
+    function cellFrom(e){
+      var t = document.elementFromPoint(e.clientX, e.clientY);
+      var cell = t && t.closest ? t.closest('.ws-cell') : null;
+      return cell && grid.contains(cell) ? cell : null;
+    }
+    function lineCells(a, b){
+      var dr = b[0]-a[0], dc = b[1]-a[1];
+      if(!(dr===0 || dc===0 || Math.abs(dr)===Math.abs(dc))) return null;
+      var steps = Math.max(Math.abs(dr), Math.abs(dc));
+      var sr = dr===0 ? 0 : dr/Math.abs(dr), sc = dc===0 ? 0 : dc/Math.abs(dc);
+      var out = [];
+      for(var i=0;i<=steps;i++){ out.push([a[0]+sr*i, a[1]+sc*i]); }
+      return out;
+    }
+    function clearSel(){
+      for(var i=0;i<n;i++){ for(var j=0;j<n;j++){ cellEls[i][j].classList.remove('sel'); } }
+    }
+    function paintSel(a, b){
+      clearSel();
+      var cells = lineCells(a, b) || [a];
+      cells.forEach(function(p){ cellEls[p[0]][p[1]].classList.add('sel'); });
+    }
+    function finishGame(allFound){
+      done = true;
+      clearSel();
+      placed.forEach(function(p){
+        if(!p.found){
+          recordAttempt(p.item.w, false);
+          p.chip.classList.add('missed');
+          p.cells.forEach(function(q){ cellEls[q[0]][q[1]].className = 'ws-cell f3'; });
+        }
+      });
+      actions.innerHTML = '';
+      stage.insertBefore(el('div',{class:'feedback-banner '+(allFound?'ok':'no')}, (allFound?ICON_CHECK:ICON_CROSS) + (allFound ? 'Tous les mots sont trouvés !' : 'Voici les mots que tu as manqués')), wordsBox);
+      var next = el('button',{class:'btn btn-primary btn-lg'}, 'Voir le résultat');
+      next.addEventListener('click', function(){ finishRound(); });
+      actions.appendChild(next);
+    }
+    function tryWord(a, b){
+      var cells = lineCells(a, b);
+      clearSel();
+      if(!cells || cells.length < 2) return;
+      var str = cells.map(function(p){ return built.grid[p[0]][p[1]]; }).join('');
+      var rev = str.split('').reverse().join('');
+      var hit = placed.find(function(p){ return !p.found && (p.str === str || p.str === rev); });
+      if(!hit) return;
+      hit.found = true;
+      var tone = 'f' + (foundCount % 6);
+      cells.forEach(function(p){ cellEls[p[0]][p[1]].className = 'ws-cell ' + tone; });
+      hit.chip.classList.add('found');
+      foundCount++;
+      recordAttempt(hit.item.w, true);
+      setGameProgress('wordsearch', foundCount, placed.length, 'mots');
+      if(foundCount === placed.length) finishGame(true);
+    }
+    grid.addEventListener('pointerdown', function(e){
+      if(done) return;
+      var cell = cellFrom(e);
+      if(!cell) return;
+      e.preventDefault();
+      if(anchor){
+        var a = anchor; anchor = null;
+        tryWord(a, posOf(cell));
+        return;
+      }
+      dragging = true; start = posOf(cell); cur = start;
+      paintSel(start, cur);
+    });
+    grid.addEventListener('pointermove', function(e){
+      if(!dragging || done) return;
+      var cell = cellFrom(e);
+      if(!cell) return;
+      var p = posOf(cell);
+      if(p[0] !== cur[0] || p[1] !== cur[1]){ cur = p; paintSel(start, cur); }
+    });
+    function endDrag(){
+      if(!dragging) return;
+      dragging = false;
+      if(cur[0] === start[0] && cur[1] === start[1]){ anchor = start; return; }
+      tryWord(start, cur);
+    }
+    grid.addEventListener('pointerup', endDrag);
+    grid.addEventListener('pointercancel', function(){ dragging = false; anchor = null; clearSel(); });
+    giveUp.addEventListener('click', function(){ if(!done) finishGame(false); });
+  }
+
+  /* ---------------- LE PENDU ---------------- */
+  var HANGMAN_MAX = 6;
+  var HANGMAN_SVG = '<svg viewBox="0 0 120 140" class="hangman-svg" aria-hidden="true">'+
+    '<line x1="10" y1="130" x2="90" y2="130" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '<line x1="30" y1="130" x2="30" y2="10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '<line x1="30" y1="10" x2="80" y2="10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '<line x1="80" y1="10" x2="80" y2="25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '<circle class="part p1" cx="80" cy="38" r="13" stroke="currentColor" stroke-width="3" fill="none"/>'+
+    '<line class="part p2" x1="80" y1="51" x2="80" y2="90" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '<line class="part p3" x1="80" y1="60" x2="65" y2="75" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '<line class="part p4" x1="80" y1="60" x2="95" y2="75" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '<line class="part p5" x1="80" y1="90" x2="68" y2="115" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '<line class="part p6" x1="80" y1="90" x2="92" y2="115" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'+
+    '</svg>';
+  var DIACRITICS_RE = new RegExp('[\\u0300-\\u036f]', 'g');
+  function deaccent(s){ return s.normalize('NFD').replace(DIACRITICS_RE, ''); }
+  function renderHangman(){
+    if(nav.idx >= nav.round.length){ finishRound(); return; }
+    var item = nav.round[nav.idx];
+    updateProgress('hangman');
+    paintHangman(item);
+  }
+  function paintHangman(item){
+    var stage = $('#hangmanStage');
+    stage.innerHTML = '';
+    var normalized = deaccent(item.w.toLowerCase());
+    var revealed = item.w.split('').map(function(ch){ return !/[a-zàâçéèêëîïôùûü]/i.test(ch); });
+    var guessed = {};
+    var wrong = 0;
+
+    var wrap = el('div',{class:'hangman-wrap'});
+    var svgHolder = el('div',{class:'hangman-figure'}, HANGMAN_SVG);
+    wrap.appendChild(svgHolder);
+    var wordRow = el('div',{class:'hangman-word'});
+    wrap.appendChild(wordRow);
+    stage.appendChild(wrap);
+    if(item.s) stage.appendChild(el('p',{class:'sentence-display'}, 'Astuce : ' + escapeHtml(item.s.replace(new RegExp(escapeRegex(item.w),'i'), '...'))));
+    stage.appendChild(el('p',{class:'sentence-display'}, 'Les accents apparaissent automatiquement.'));
+    var keys = el('div',{class:'hangman-keys'});
+    stage.appendChild(keys);
+
+    function renderWord(){
+      wordRow.innerHTML = '';
+      item.w.split('').forEach(function(ch, i){
+        var box = el('span',{class:'hangman-letterbox'+(ch===' '?' is-space':'')}, revealed[i] ? escapeHtml(ch) : '');
+        wordRow.appendChild(box);
+      });
+    }
+    function updateFigure(){
+      for(var i=1;i<=HANGMAN_MAX;i++){
+        var part = svgHolder.querySelector('.p'+i);
+        if(part) part.classList.toggle('visible', i<=wrong);
+      }
+    }
+    renderWord(); updateFigure();
+
+    var alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    var keyButtons = {};
+    alphabet.forEach(function(letter){
+      var b = el('button',{class:'key-btn', type:'button'}, letter.toUpperCase());
+      b.addEventListener('click', function(){ guessLetter(letter, b); });
+      keys.appendChild(b);
+      keyButtons[letter] = b;
+    });
+
+    function guessLetter(letter, btn){
+      if(guessed[letter]) return;
+      guessed[letter] = true;
+      btn.setAttribute('disabled','true');
+      var found = false;
+      for(var i=0;i<normalized.length;i++){
+        if(normalized[i]===letter){ revealed[i]=true; found=true; }
+      }
+      if(found){ btn.classList.add('used-correct'); }
+      else { btn.classList.add('used-wrong'); wrong++; updateFigure(); }
+      renderWord();
+      if(revealed.every(function(v){return v;})){ endHangman(true); }
+      else if(wrong>=HANGMAN_MAX){ endHangman(false); }
+    }
+
+    function endHangman(win){
+      recordAttempt(item.w, win);
+      alphabet.forEach(function(l){ keyButtons[l].setAttribute('disabled','true'); });
+      revealed = revealed.map(function(){ return true; });
+      renderWord();
+      var banner = el('div',{class:'feedback-banner '+(win?'ok':'no')}, (win?ICON_CHECK:ICON_CROSS) + (win?'Sauvé, bravo !':'Oh non...'));
+      stage.appendChild(banner);
+      if(!win) stage.appendChild(el('div',{class:'sentence-display'}, 'Le mot était : ' + escapeHtml(item.w)));
+      var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
+      next.addEventListener('click', function(){ nav.idx++; renderHangman(); });
+      stage.appendChild(next);
+    }
+  }
+
+  /* ---------------- editor ---------------- */
+  var editingListId = null;
+  function updateWordCountHint(){
+    var raw = $('#listWords').value.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+    var n = raw.length;
+    var hint = $('#wordCountHint');
+    if(n < MIN_LIST_WORDS){
+      hint.textContent = n + ' mot' + (n>1?'s':'') + ' — encore ' + (MIN_LIST_WORDS-n) + ' pour atteindre le minimum de ' + MIN_LIST_WORDS + '.';
+      hint.style.color = 'var(--red)';
+    } else {
+      hint.textContent = n + ' mot' + (n>1?'s':'') + ' dans cette liste.';
+      hint.style.color = '';
+    }
+  }
+  $('#listWords').addEventListener('input', updateWordCountHint);
+  function openEditor(listId){
+    editingListId = listId || null;
+    var form = $('#editorForm');
+    if(listId){
+      var list = getList(listId);
+      $('#editorEyebrow').textContent = 'Modifier la liste';
+      $('#listName').value = list.name;
+      $('#listWords').value = list.words.map(function(w){ return w.s ? (w.w+' ; '+w.s) : w.w; }).join('\n');
+      $('#btnDeleteList').style.display = 'inline-flex';
+    } else {
+      $('#editorEyebrow').textContent = 'Nouvelle liste';
+      $('#listName').value = '';
+      $('#listWords').value = '';
+      $('#btnDeleteList').style.display = 'none';
+    }
+    updateWordCountHint();
+    goto('editor');
+  }
+  $('#editorForm').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var name = $('#listName').value.trim();
+    var raw = $('#listWords').value.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+    if(!name){ toast('Ajoute un nom à ta liste.'); return; }
+    if(raw.length < MIN_LIST_WORDS){
+      toast('Il faut au moins ' + MIN_LIST_WORDS + ' mots (encore ' + (MIN_LIST_WORDS - raw.length) + ' à ajouter).');
+      return;
+    }
+    var words = raw.map(function(line){
+      var parts = line.split(';');
+      return { w: parts[0].trim(), s: parts[1] ? parts[1].trim() : '' };
+    });
+    if(editingListId){
+      var list = getList(editingListId);
+      list.name = name; list.words = words;
+    } else {
+      state.lists.push({ id: 'list_'+Date.now(), name: name, words: words });
+    }
+    saveState();
+    toast('Liste enregistrée !');
+    renderHome();
+    goto('home');
+  });
+  $('#btnDeleteList').addEventListener('click', function(){
+    if(!editingListId) return;
+    state.lists = state.lists.filter(function(l){ return l.id !== editingListId; });
+    delete state.progress[editingListId];
+    delete state.gradeFloors[editingListId];
+    saveState();
+    renderHome();
+    goto('home');
+  });
+
+  /* ---------------- declinaisons ---------------- */
+  var declTemps = ['présent','imparfait','futur simple','passé composé','conditionnel présent'];
+  $('#declTemps').innerHTML = declTemps.map(function(t,i){
+    return '<label class="decl-check"><input type="checkbox" data-temps="'+escapeHtml(t)+'"'+(i===0?' checked':'')+'> '+escapeHtml(t)+'</label>';
+  }).join('');
+  $('#declConj').addEventListener('change', function(){ $('#declTemps').hidden = !this.checked; });
+
+  var declData = [];
+  function currentLines(){ return $('#listWords').value.split('\n').map(function(l){ return l.trim(); }).filter(Boolean); }
+  function lineWord(line){ return line.split(';')[0].trim(); }
+
+  $('#btnDecline').addEventListener('click', function(){
+    var words = currentLines().map(lineWord);
+    var status = $('#declStatus'), results = $('#declResults');
+    results.innerHTML = '';
+    if(!words.length){ status.textContent = "Écris d'abord quelques mots dans la liste."; return; }
+    if(words.length > 12){ status.textContent = '12 mots au maximum à la fois : garde seulement ceux à décliner.'; return; }
+    var temps = Array.prototype.map.call(document.querySelectorAll('#declTemps input:checked'), function(i){ return i.getAttribute('data-temps'); });
+    var options = { nombre:$('#declNombre').checked, genre:$('#declGenre').checked, conjugaison:$('#declConj').checked, temps:temps };
+    if(!options.nombre && !options.genre && !options.conjugaison){ status.textContent = 'Coche au moins un type de forme.'; return; }
+    if(options.conjugaison && !temps.length){ status.textContent = 'Coche au moins un temps.'; return; }
+    var btn = $('#btnDecline'); btn.setAttribute('disabled','true');
+    status.textContent = 'Recherche en cours…';
+    apiFetch('api/declinaisons', { method:'POST', body: JSON.stringify({ mots:words, options:options }) }).then(function(d){
+      declData = d.mots;
+      renderDecl(d.source);
+    }).catch(function(e){ status.textContent = e.message; }).then(function(){ btn.removeAttribute('disabled'); });
+  });
+
+  function renderDecl(source){
+    var status = $('#declStatus'), results = $('#declResults');
+    var total = declData.reduce(function(n,m){ return n + m.formes.length; }, 0);
+    if(source){
+      status.textContent = total
+        ? (source === 'regles' ? 'Règles automatiques (sans IA) : vérifie les formes. Pour les verbes et les mots sans article, il faut une clé Gemini sur le serveur.' : 'Coche les formes à ajouter à la liste.')
+        : (source === 'regles' ? "Aucune forme trouvée sans IA (seuls les groupes avec article, comme « une hirondelle », sont gérés). Une clé Gemini sur le serveur permet de décliner tous les mots et les verbes." : 'Aucune forme trouvée pour ces mots.');
+    }
+    var existing = {};
+    currentLines().forEach(function(l){ existing[lineWord(l).toLowerCase()] = true; });
+    results.innerHTML = '';
+    declData.forEach(function(m, mi){
+      if(!m.formes.length) return;
+      var g = el('div',{class:'decl-group'});
+      g.appendChild(el('h4',{}, escapeHtml(m.mot)+' <small>'+escapeHtml(m.nature)+'</small>'));
+      var lastLabel = null;
+      m.formes.forEach(function(f, fi){
+        var label = f.type === 'conjugaison' ? f.libelle : (f.type === 'nombre' ? 'pluriel / singulier' : 'féminin / masculin');
+        if(label !== lastLabel){ g.appendChild(el('div',{class:'decl-sub'}, escapeHtml(label))); lastLabel = label; }
+        var already = existing[f.texte.toLowerCase()];
+        var row = el('label',{class:'decl-form'});
+        row.innerHTML = '<input type="checkbox" data-m="'+mi+'" data-f="'+fi+'"'+(f.type !== 'conjugaison' && !already ? ' checked' : '')+(already ? ' disabled' : '')+'> <span>'+escapeHtml(f.texte)+'</span>'
+          + (already ? ' <em>déjà dans la liste</em>' : (f.type !== 'conjugaison' ? ' <em>'+escapeHtml(f.libelle)+'</em>' : ''));
+        g.appendChild(row);
+      });
+      results.appendChild(g);
+    });
+    if(total){
+      var add = el('button',{type:'button',class:'btn btn-primary',style:'margin-top:10px;'}, 'Ajouter les formes cochées');
+      add.addEventListener('click', addCheckedForms);
+      results.appendChild(add);
+    }
+  }
+  function addCheckedForms(){
+    var lines = [];
+    document.querySelectorAll('#declResults input[type=checkbox]:checked:not(:disabled)').forEach(function(c){
+      var f = declData[+c.getAttribute('data-m')].formes[+c.getAttribute('data-f')];
+      lines.push(f.phrase ? f.texte+' ; '+f.phrase : f.texte);
+    });
+    if(!lines.length){ toast('Aucune forme cochée.'); return; }
+    var area = $('#listWords');
+    area.value = (area.value.replace(/\s+$/,'') + '\n' + lines.join('\n')).replace(/^\n/,'');
+    updateWordCountHint();
+    renderDecl('');
+    $('#declStatus').textContent = lines.length + (lines.length>1 ? ' formes ajoutées' : ' forme ajoutée') + ' à la liste. Pense à enregistrer.';
+    toast(lines.length + (lines.length>1 ? ' mots ajoutés' : ' mot ajouté'));
+  }
+
+  /* ---------------- mistakes notebook ---------------- */
+  function renderMistakesBook(){
+    var rows = [];
+    state.lists.forEach(function(list){
+      list.words.forEach(function(w){
+        var p = state.progress[list.id] && state.progress[list.id][w.w];
+        if(p && p.wrongCount){
+          rows.push({ word:w.w, count:p.wrongCount, listName:list.name });
+        }
+      });
+    });
+    rows.sort(function(a,b){ return b.count - a.count; });
+    var box = $('#mistakesBookList');
+    box.innerHTML = '';
+    if(rows.length===0){
+      box.appendChild(el('div',{class:'empty'}, "Ton carnet d'erreurs est vide pour le moment. Continue à t'entraîner !"));
+      return;
+    }
+    rows.forEach(function(r){
+      var row = el('div',{class:'mistake-row'});
+      row.innerHTML = '<span class="w">'+escapeHtml(r.word)+'</span><span class="count">'+r.count+' erreur'+(r.count>1?'s':'')+' · '+escapeHtml(r.listName)+'</span>';
+      box.appendChild(row);
+    });
+  }
+
+  /* ---------------- navigation ---------------- */
+  function goto(screen){
+    nav.screen = screen;
+    $all('.page').forEach(function(p){ p.classList.toggle('active', p.dataset.screen===screen); });
+    updateRankChip();
+    window.scrollTo(0,0);
+  }
+  $all('[data-back]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var target = b.getAttribute('data-back');
+      if(target==='dashboard'){ renderDashboard(); }
+      if(target==='home'){ renderHome(); }
+      goto(target);
+    });
+  });
+  $('#btnNewList').addEventListener('click', function(){ openEditor(null); });
+  $('#btnMistakesGlobal').addEventListener('click', function(){ renderMistakesBook(); goto('mistakesBook'); });
+  $('#btnResultsAgain').addEventListener('click', function(){ startMode(nav.mode, nav.kind); });
+  $('#btnResultsDone').addEventListener('click', function(){ openDashboard(nav.listId); });
+  $('#segLearn').addEventListener('click', function(){ nav.reviewAll = false; renderDashboard(); });
+  $('#segAll').addEventListener('click', function(){ nav.reviewAll = true; renderDashboard(); });
+
+  function setTarget(n){
+    state.settings.target = Math.max(1, Math.min(MODE_IDS.length, n));
+    saveState();
+    $('#targetValue').textContent = targetCount();
+    renderHome();
+    updateStarStamp();
+  }
+  $('#targetMinus').addEventListener('click', function(){ setTarget(targetCount() - 1); });
+  $('#targetPlus').addEventListener('click', function(){ setTarget(targetCount() + 1); });
+
+  /* ---------------- profil ---------------- */
+  $('#profileName').textContent = profileName();
+  $('#btnProfile').addEventListener('click', function(){
+    var n = window.prompt('Prénom du profil (les listes et la progression sont gardées par profil) :', profileName());
+    if(n === null) return;
+    n = n.trim();
+    if(!/^[A-Za-zÀ-ÿ0-9 _-]{1,30}$/.test(n)){ toast('Profil invalide (30 caractères, lettres et chiffres).'); return; }
+    try{ localStorage.setItem('cahierMalin_profil', n); }catch(e){}
+    location.reload();
+  });
+
+  /* ---------------- init ---------------- */
+  $('#targetValue').textContent = targetCount();
+  $('#targetRange').textContent = 'exercices réussis (de 1 à ' + MODE_IDS.length + ')';
+  updateStarStamp();
+  renderHome();
+  goto('home');
+  syncFromServer();
+})();
+</script>
+
+</body></html>
