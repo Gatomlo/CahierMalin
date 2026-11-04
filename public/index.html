@@ -684,6 +684,16 @@
     <div class="stage" id="hangmanStage"></div>
   </section>
 
+  <!-- PHRASE A TROUS -->
+  <section class="page" data-screen="cloze">
+    <button class="backlink" data-back="dashboard">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="game-progress"><span id="clozeProgressLabel">1 / 6</span><div class="track"><span id="clozeProgressBar" style="width:0%"></span></div></div>
+    <div class="stage" id="clozeStage"></div>
+  </section>
+
   <!-- RESULTS -->
   <section class="page" data-screen="results">
     <div class="page-head" style="text-align:center;">
@@ -721,6 +731,7 @@
       <div class="field">
         <label for="listWords">Mots à apprendre</label>
         <span class="hint">Un mot par ligne, 6 minimum (une manche complète va jusqu'à 10). Ajoute une phrase d'exemple après un point-virgule : <em>maison ; Ma maison a un grand jardin.</em></span>
+        <span class="hint">Verbes : écris l'infinitif avec le temps, comme <em>chanter (présent)</em>. Toutes les personnes (je, tu, il, nous, vous, ils) sont créées, ou seulement celles que tu choisis : <em>chanter (présent : je, nous)</em>. Temps : présent, imparfait, futur, passé composé, conditionnel.</span>
         <textarea id="listWords" placeholder="aujourd'hui ; Aujourd'hui, nous allons à la piscine.&#10;beaucoup&#10;difficile ; Cet exercice est difficile."></textarea>
         <span class="hint" id="wordCountHint"></span>
       </div>
@@ -733,7 +744,8 @@
           <label class="decl-check"><input type="checkbox" id="declConj"> Conjugaison</label>
         </div>
         <div class="decl-opts" id="declTemps" hidden></div>
-        <div><button type="button" class="btn btn-ghost" id="btnDecline">Proposer des formes</button></div>
+        <div class="decl-opts"><button type="button" class="btn btn-ghost" id="btnDecline">Proposer des formes</button>
+          <button type="button" class="btn btn-ghost" id="btnPhrases" hidden>Ajouter des phrases d'exemple</button></div>
         <span class="hint" id="declStatus"></span>
         <div id="declResults"></div>
       </div>
@@ -780,6 +792,7 @@
   var ICON_SAFE = '<svg viewBox="0 0 20 20" fill="none"><rect x="3" y="3.5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="9.5" r="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M6 15.5V17M14 15.5V17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   var ICON_MEMORY ='<svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="5.5" width="8" height="11" rx="1.6" stroke="currentColor" stroke-width="1.6"/><rect x="9.5" y="3.5" width="8" height="11" rx="1.6" stroke="currentColor" stroke-width="1.6" fill="var(--surface)"/><path d="M13.5 7.5v3M12 9h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   var ICON_WORDSEARCH = '<svg viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M12.3 12.3 17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 8.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var ICON_CLOZE = '<svg viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h4M13 10h4M3 14h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 11.5h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
   var ICON_RIBBON = '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 11 6 18l4-2 4 2-1.5-7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 
   /* ---------------- default data ---------------- */
@@ -867,7 +880,7 @@
   /* Chaque liste a son propre score en % et son propre grade : 100 % seulement
      quand chaque mot de la liste est acquis. Un grade atteint n'est jamais perdu,
      même si l'on ajoute des mots à la liste ensuite. */
-  var MODE_IDS = ['flash','quiz','memory','wordsearch','scramble','safe','hangman','dictee'];
+  var MODE_IDS = ['flash','quiz','memory','wordsearch','scramble','safe','hangman','dictee','cloze'];
   var GRADES = [
     { key:'cp', label:'CP', pct:0 },
     { key:'ce1', label:'CE1', pct:12 },
@@ -885,6 +898,7 @@
     { id:'scramble', title:'Lettres mêlées', desc:"Remets les lettres mélangées dans le bon ordre.", icon:ICON_SCRAMBLE },
     { id:'safe', title:'Le Coffre-fort', desc:"Écoute le mot, tourne les molettes pour composer le code et ouvre le coffre.", icon:ICON_SAFE },
     { id:'hangman', title:'Le Pendu', desc:"Devine le mot lettre par lettre avant la fin du dessin.", icon:ICON_HANGMAN },
+    { id:'cloze', title:'Phrase à trous', desc:"Retrouve le mot qui manque dans une phrase simple et écris-le.", icon:ICON_CLOZE },
     { id:'dictee', title:'Dictée audio', desc:"Écoute le mot puis écris-le, sans aucune aide visuelle : la vraie dictée.", icon:ICON_SPEAKER }
   ];
   function targetCount(){
@@ -916,7 +930,7 @@
     if(idx > floor){ state.gradeFloors[listId] = idx; saveState(); floor = idx; }
     return Math.max(idx, floor);
   }
-  var LIST_SCREENS = ['dashboard','flash','dictee','quiz','memory','wordsearch','scramble','safe','hangman','results'];
+  var LIST_SCREENS = ['dashboard','flash','dictee','cloze','quiz','memory','wordsearch','scramble','safe','hangman','results'];
   function updateRankChip(){
     var chip = $('#rankChip');
     var list = getList(nav.listId);
@@ -966,6 +980,7 @@
   }
   function wsClean(w){ return deaccent(w.toLowerCase()).replace(/[^a-z]/g, '').toUpperCase(); }
   function canPlay(mode, w){
+    if(mode === 'cloze') return hasSentence(w);
     if(mode !== 'wordsearch') return true;
     var n = wsClean(w.w).length;
     return n >= 3 && n <= 12;
@@ -1172,11 +1187,11 @@
       if(nav.reviewAll){
         var playN = list.words.filter(function(w){ return canPlay(def.id, w); }).length;
         disabled = playN === 0;
-        meta = playN ? ('Tous les mots (' + playN + ')') : 'Mots trop longs pour la grille';
+        meta = playN ? ('Tous les mots (' + playN + ')') : (def.id === 'cloze' ? "Ajoute des phrases d'exemple" : 'Mots trop longs pour la grille');
       } else {
         var n = eligibleWords(list, def.id).length;
         disabled = n === 0;
-        meta = n ? (n + ' mot' + (n>1?'s':'') + ' à faire') : 'Tout réussi ici !';
+        meta = n ? (n + ' mot' + (n>1?'s':'') + ' à faire') : (def.id === 'cloze' && !list.words.some(hasSentence) ? "Ajoute des phrases d'exemple" : 'Tout réussi ici !');
       }
       var card = el('button',{class:'mode-card', type:'button'});
       if(disabled) card.setAttribute('disabled','true');
@@ -1242,6 +1257,7 @@
     nav.startGradeIdx = currentGradeIdx(nav.listId);
     if(mode==='flash') { goto('flash'); renderFlash(); }
     else if(mode==='dictee') { goto('dictee'); renderDictee(); }
+    else if(mode==='cloze') { goto('cloze'); renderCloze(); }
     else if(mode==='quiz') { goto('quiz'); renderQuiz(); }
     else if(mode==='scramble') { goto('scramble'); renderScramble(); }
     else if(mode==='hangman') { goto('hangman'); renderHangman(); }
@@ -1380,6 +1396,50 @@
     if(item.s) stage.appendChild(el('div',{class:'sentence-display'}, escapeHtml(item.s)));
     var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
     next.addEventListener('click', function(){ nav.idx++; renderDictee(); });
+    stage.appendChild(next);
+  }
+
+  /* ---------------- PHRASE A TROUS ---------------- */
+  function sentenceRegex(w){ return new RegExp(escapeRegex(w).replace(/['’]/g, "['’]"), 'i'); }
+  function hasSentence(w){ return !!(w.s && sentenceRegex(w.w).test(w.s)); }
+  function sameWord(a, b){ return a.trim().toLowerCase().replace(/’/g, "'") === b.trim().toLowerCase().replace(/’/g, "'"); }
+  function renderCloze(){
+    if(nav.idx >= nav.round.length){ finishRound(); return; }
+    var item = nav.round[nav.idx];
+    updateProgress('cloze');
+    paintClozePrompt(item);
+  }
+  function paintClozePrompt(item){
+    var stage = $('#clozeStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('p',{class:'sentence-display'}, 'Complète la phrase avec le mot qui manque.'));
+    if(item.g) stage.appendChild(el('p',{class:'sentence-display'}, 'Verbe : ' + escapeHtml(item.g.replace(/\s*:[^)]*\)/, ')'))));
+    var m = sentenceRegex(item.w).exec(item.s);
+    var html = escapeHtml(item.s.slice(0, m.index)) + '<span class="blank" style="min-width:'+Math.max(2.4, item.w.length*0.6)+'em"></span>' + escapeHtml(item.s.slice(m.index + m[0].length));
+    stage.appendChild(el('div',{class:'sentence-display', style:'font-size:1.25rem;color:var(--ink);line-height:1.8;'}, html));
+    var input = el('input',{class:'answer-input', type:'text', autocomplete:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Écris le mot qui manque', 'aria-label':'Ta réponse'});
+    stage.appendChild(input);
+    var check = el('button',{class:'btn btn-primary btn-lg'}, 'Vérifier');
+    check.addEventListener('click', function(){ paintClozeCheck(item, input.value); });
+    input.addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ paintClozeCheck(item, input.value); } });
+    stage.appendChild(check);
+    setTimeout(function(){ input.focus(); }, 200);
+  }
+  function paintClozeCheck(item, typed){
+    typed = (typed||'').trim();
+    var correct = sameWord(typed, item.w);
+    recordAttempt(item.w, correct);
+    var stage = $('#clozeStage');
+    stage.innerHTML = '';
+    stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
+    stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(item.w, typed || ' '))));
+    var m = sentenceRegex(item.w).exec(item.s);
+    stage.appendChild(el('div',{class:'sentence-display', style:'color:var(--ink);'}, escapeHtml(item.s.slice(0, m.index)) + '<strong>' + escapeHtml(m[0]) + '</strong>' + escapeHtml(item.s.slice(m.index + m[0].length))));
+    var listen = el('button',{class:'speak-btn replay'}, ICON_SPEAKER + 'Écouter la phrase');
+    listen.addEventListener('click', function(){ speak(item.s); });
+    stage.appendChild(listen);
+    var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
+    next.addEventListener('click', function(){ nav.idx++; renderCloze(); });
     stage.appendChild(next);
   }
 
@@ -1987,9 +2047,40 @@
 
   /* ---------------- editor ---------------- */
   var editingListId = null;
+  var CONJ_TEMPS = { 'present':'présent', 'imparfait':'imparfait', 'futur':'futur simple', 'futur simple':'futur simple', 'passe compose':'passé composé', 'conditionnel':'conditionnel présent', 'conditionnel present':'conditionnel présent' };
+  var CONJ_PERS = ['je','tu','il','nous','vous','ils'];
+  function stripAccents(s){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  // "chanter (présent : je, nous)" -> { verbe, temps, personnes } ; null si ce n'est pas une conjugaison
+  function parseConjLine(line){
+    var m = /^([A-Za-zÀ-ÿ-]+)\s*\(\s*([^:)]+?)\s*(?::\s*([^)]*))?\)\s*$/.exec(line);
+    if(!m) return null;
+    var temps = CONJ_TEMPS[stripAccents(m[2].toLowerCase()).replace(/\s+/g,' ')];
+    if(!temps) return null;
+    var pers = [];
+    if(m[3]){
+      m[3].split(/[,;\s]+/).forEach(function(p){
+        p = stripAccents(p.toLowerCase());
+        if(p === 'elle') p = 'il';
+        if(p === 'elles') p = 'ils';
+        if(CONJ_PERS.indexOf(p) !== -1 && pers.indexOf(p) === -1) pers.push(p);
+      });
+      if(!pers.length) return null;
+    }
+    return { verbe:m[1].toLowerCase(), temps:temps, personnes:pers.length ? pers : CONJ_PERS.slice() };
+  }
+  function lineKey(line){ var c = parseConjLine(line); return c ? c.verbe + ' (' + c.temps + (c.personnes.length < 6 ? ' : ' + c.personnes.join(', ') : '') + ')' : null; }
+  function listToText(list){
+    var out = [], lastG = null;
+    list.words.forEach(function(w){
+      if(w.g){ if(w.g !== lastG){ out.push(w.g); lastG = w.g; } return; }
+      lastG = null;
+      out.push(w.s ? (w.w+' ; '+w.s) : w.w);
+    });
+    return out.join('\n');
+  }
   function updateWordCountHint(){
     var raw = $('#listWords').value.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
-    var n = raw.length;
+    var n = raw.reduce(function(sum, l){ var c = parseConjLine(l); return sum + (c ? c.personnes.length : 1); }, 0);
     var hint = $('#wordCountHint');
     if(n < MIN_LIST_WORDS){
       hint.textContent = n + ' mot' + (n>1?'s':'') + ' — encore ' + (MIN_LIST_WORDS-n) + ' pour atteindre le minimum de ' + MIN_LIST_WORDS + '.';
@@ -2007,7 +2098,7 @@
       var list = getList(listId);
       $('#editorEyebrow').textContent = 'Modifier la liste';
       $('#listName').value = list.name;
-      $('#listWords').value = list.words.map(function(w){ return w.s ? (w.w+' ; '+w.s) : w.w; }).join('\n');
+      $('#listWords').value = listToText(list);
       $('#btnDeleteList').style.display = 'inline-flex';
     } else {
       $('#editorEyebrow').textContent = 'Nouvelle liste';
@@ -2018,29 +2109,61 @@
     updateWordCountHint();
     goto('editor');
   }
+  // Lignes -> mots. Les lignes "verbe (temps)" deviennent une forme par personne (mots
+  // ordinaires, avec g = la ligne d'origine) ; celles d'une liste existante sont reprises
+  // telles quelles (progression et phrases conservees), les autres demandees au serveur.
+  function buildWords(raw, existing){
+    var known = {};
+    (existing ? existing.words : []).forEach(function(w){ if(w.g){ (known[w.g] = known[w.g] || []).push(w); } });
+    var jobs = [];
+    var plan = raw.map(function(line){
+      var c = parseConjLine(line);
+      if(!c) { var parts = line.split(';'); return { word:{ w: parts[0].trim(), s: parts[1] ? parts[1].trim() : '' } }; }
+      var key = lineKey(line);
+      if(known[key]) return { forms: known[key] };
+      jobs.push({ verbe:c.verbe, temps:c.temps, personnes:c.personnes, key:key });
+      return { key:key };
+    });
+    var ask = jobs.length ? apiFetch('api/conjugaison', { method:'POST', body: JSON.stringify({ verbes: jobs.map(function(j){ return { verbe:j.verbe, temps:j.temps, personnes:j.personnes }; }) }) }) : Promise.resolve({ verbes:[] });
+    return ask.then(function(r){
+      var byKey = {};
+      jobs.forEach(function(j, i){
+        byKey[j.key] = r.verbes[i].formes.map(function(f){ return { w:f.texte, s:f.phrase || '', g:j.key }; });
+      });
+      var words = [], seen = {};
+      plan.forEach(function(p){
+        (p.word ? [p.word] : (p.forms || byKey[p.key])).forEach(function(w){
+          var k = w.w.toLowerCase();
+          if(seen[k]) return;
+          seen[k] = true; words.push(w);
+        });
+      });
+      return words;
+    });
+  }
   $('#editorForm').addEventListener('submit', function(ev){
     ev.preventDefault();
     var name = $('#listName').value.trim();
     var raw = $('#listWords').value.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
     if(!name){ toast('Ajoute un nom à ta liste.'); return; }
-    if(raw.length < MIN_LIST_WORDS){
-      toast('Il faut au moins ' + MIN_LIST_WORDS + ' mots (encore ' + (MIN_LIST_WORDS - raw.length) + ' à ajouter).');
-      return;
-    }
-    var words = raw.map(function(line){
-      var parts = line.split(';');
-      return { w: parts[0].trim(), s: parts[1] ? parts[1].trim() : '' };
-    });
-    if(editingListId){
-      var list = getList(editingListId);
-      list.name = name; list.words = words;
-    } else {
-      state.lists.push({ id: 'list_'+Date.now(), name: name, words: words });
-    }
-    saveState();
-    toast('Liste enregistrée !');
-    renderHome();
-    goto('home');
+    var submit = $('#editorForm button[type=submit]');
+    submit.setAttribute('disabled','true');
+    buildWords(raw, editingListId ? getList(editingListId) : null).then(function(words){
+      if(words.length < MIN_LIST_WORDS){
+        toast('Il faut au moins ' + MIN_LIST_WORDS + ' mots (encore ' + (MIN_LIST_WORDS - words.length) + ' à ajouter).');
+        return;
+      }
+      if(editingListId){
+        var list = getList(editingListId);
+        list.name = name; list.words = words;
+      } else {
+        state.lists.push({ id: 'list_'+Date.now(), name: name, words: words });
+      }
+      saveState();
+      toast('Liste enregistrée !');
+      renderHome();
+      goto('home');
+    }).catch(function(e){ toast(e.message); }).then(function(){ submit.removeAttribute('disabled'); });
   });
   $('#btnDeleteList').addEventListener('click', function(){
     if(!editingListId) return;
@@ -2059,12 +2182,31 @@
   }).join('');
   $('#declConj').addEventListener('change', function(){ $('#declTemps').hidden = !this.checked; });
 
+  apiFetch('api/config').then(function(c){ if(c.gemini) $('#btnPhrases').hidden = false; }).catch(function(){});
+  $('#btnPhrases').addEventListener('click', function(){
+    var lines = currentLines();
+    var need = lines.filter(function(l){ return !parseConjLine(l) && l.indexOf(';') === -1; });
+    var status = $('#declStatus');
+    if(!need.length){ status.textContent = 'Tous les mots ont déjà une phrase.'; return; }
+    if(need.length > 25){ status.textContent = '25 mots au maximum à la fois.'; return; }
+    var btn = $('#btnPhrases'); btn.setAttribute('disabled','true');
+    status.textContent = 'Écriture des phrases…';
+    apiFetch('api/phrases', { method:'POST', body: JSON.stringify({ mots:need }) }).then(function(r){
+      var n = 0;
+      $('#listWords').value = lines.map(function(l){
+        if(r.phrases[l]){ n++; return l + ' ; ' + r.phrases[l]; }
+        return l;
+      }).join('\n');
+      status.textContent = n + ' phrase' + (n>1?'s ajoutées':' ajoutée') + (n < need.length ? ' (' + (need.length - n) + ' sans résultat)' : '') + '. Relis-les avant d\'enregistrer.';
+    }).catch(function(e){ status.textContent = e.message; }).then(function(){ btn.removeAttribute('disabled'); });
+  });
+
   var declData = [];
   function currentLines(){ return $('#listWords').value.split('\n').map(function(l){ return l.trim(); }).filter(Boolean); }
   function lineWord(line){ return line.split(';')[0].trim(); }
 
   $('#btnDecline').addEventListener('click', function(){
-    var words = currentLines().map(lineWord);
+    var words = currentLines().filter(function(l){ return !parseConjLine(l); }).map(lineWord);
     var status = $('#declStatus'), results = $('#declResults');
     results.innerHTML = '';
     if(!words.length){ status.textContent = "Écris d'abord quelques mots dans la liste."; return; }

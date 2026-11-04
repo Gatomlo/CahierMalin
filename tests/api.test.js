@@ -95,3 +95,19 @@ test('declinaisons avec Gemini : nettoyage, cache', async () => {
   assert.equal(fakeCalls, 1);
   delete process.env.GEMINI_API_KEY;
 });
+
+test('conjugaison sans cle : verbes reguliers, personnes choisies', async () => {
+  const post = (verbes) => call('/api/conjugaison', { method: 'POST', body: JSON.stringify({ verbes }) });
+  let d = await (await post([{ verbe: 'chanter', temps: 'présent' }])).json();
+  assert.deepEqual(d.verbes[0].formes.map((f) => f.texte), ['je chante', 'tu chantes', 'il chante', 'nous chantons', 'vous chantez', 'ils chantent']);
+  d = await (await post([{ verbe: 'finir', temps: 'passé composé', personnes: ['nous', 'je'] }])).json();
+  assert.deepEqual(d.verbes[0].formes.map((f) => f.texte), ["j'ai fini", 'nous avons fini']);
+  const bad = await post([{ verbe: 'aller', temps: 'présent' }]);
+  assert.equal(bad.status, 422);
+  assert.equal((await post([{ verbe: 'chanter', temps: 'inconnu' }])).status, 400);
+});
+
+test('phrases : cle Gemini requise', async () => {
+  const r = await call('/api/phrases', { method: 'POST', body: JSON.stringify({ mots: ['maison'] }) });
+  assert.equal(r.status, 400);
+});

@@ -82,6 +82,13 @@ api.post('/declinaisons', profile, limit, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+api.post('/conjugaison', profile, limit, async (req, res, next) => {
+  try { res.json(await forms.conjugateEntries((req.body || {}).verbes)); } catch (e) { next(e); }
+});
+api.post('/phrases', profile, limit, async (req, res, next) => {
+  try { res.json(await forms.phrases((req.body || {}).mots)); } catch (e) { next(e); }
+});
+
 api.use((req, res) => res.status(404).json({ error: 'Adresse inconnue.' }));
 api.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   const status = err.status || err.statusCode || 500;
