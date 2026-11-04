@@ -22,6 +22,8 @@ test.before(async () => {
     let body = '';
     req.on('data', (c) => { body += c; });
     req.on('end', () => {
+      if (req.url.includes('inconnu-modele')) { res.statusCode = 404; res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ error: { message: 'models/inconnu-modele is not found' } })); }
+      if (req.headers['x-goog-api-key'] === 'CLEREFUSEE-1234567890123') { res.statusCode = 400; res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ error: { message: 'API key not valid. Please pass a valid API key.' } })); }
       if (req.method === 'GET' && req.url.includes('/models')) {
         res.setHeader('content-type', 'application/json');
         const m = (name, methods = ['generateContent']) => ({ name: 'models/' + name, displayName: name, supportedGenerationMethods: methods });
@@ -261,4 +263,17 @@ test('reglages admin : cle chiffree, jamais renvoyee, test, voix par defaut', as
   s = await (await call('/api/parent/admin/settings', { method: 'PUT', body: JSON.stringify({ clearKey: true }) })).json();
   assert.equal(s.keySet, false);
   assert.equal((await (await call('/api/config')).json()).gemini, false);
+});
+
+test('erreurs Gemini lisibles : cle refusee, modele introuvable, cle avec point acceptee', async () => {
+  process.env.GEMINI_BASE_URL = `http://127.0.0.1:${fake.address().port}`;
+  const put = (b) => call('/api/parent/admin/settings', { method: 'PUT', body: JSON.stringify(b) });
+  const test = async () => (await call('/api/parent/admin/test-gemini', { method: 'POST', body: '{}' })).json();
+  assert.equal((await put({ geminiKey: 'avec des espaces dedans' })).status, 400);
+  assert.equal((await put({ geminiKey: 'AQ.Ab8RN6FakeKeyWithDot1234567' })).status, 200); // format a point accepte
+  await put({ geminiKey: 'CLEREFUSEE-1234567890123' });
+  assert.match((await test()).error, /refuse la clé : API key not valid/);
+  await put({ geminiKey: 'AIzaSyFAKEFAKEFAKEFAKE1234567890', model: 'inconnu-modele' });
+  assert.match((await test()).error, /Modèle « inconnu-modele » introuvable/);
+  await put({ model: 'gemini-flash-latest', clearKey: true });
 });
