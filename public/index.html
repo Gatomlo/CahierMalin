@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#26415F"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Le Cahier Malin</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Baloo+2:wght@500;600;700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
@@ -546,6 +546,25 @@
   .adv-setup{ width:100%; max-width:420px; display:flex; flex-direction:column; gap:14px; text-align:left; }
   .adv-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:.92rem; }
   .adv-row select{ font-family:'Karla'; font-size:.95rem; padding:8px 10px; border-radius:8px; border:1.5px solid var(--paper-edge); background:var(--surface); color:var(--ink); }
+  .p-card{ background:var(--surface); border:1px solid var(--paper-edge); border-radius:12px; padding:14px 16px; margin-bottom:14px; box-shadow:var(--shadow); text-align:left; }
+  .p-card .field{ margin-bottom:10px; }
+  .p-profile{ border-top:1px dashed var(--paper-edge); padding:12px 0; display:flex; flex-direction:column; gap:8px; }
+  .p-profile:first-of-type{ border-top:none; }
+  .p-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:.9rem; }
+  .p-row input[type=text], .p-row input[type=password], .p-row select{ font-family:'Karla'; font-size:.9rem; padding:7px 10px; border-radius:8px; border:1.5px solid var(--paper-edge); background:var(--paper); color:var(--ink); min-width:0; }
+  .p-btn{ padding:6px 12px !important; font-size:.82rem !important; }
+  .bars{ display:flex; align-items:flex-end; gap:4px; height:90px; margin:8px 0 2px; }
+  .bar{ flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%; min-width:0; }
+  .bar span{ display:block; width:100%; }
+  .bar .b-ok{ background:var(--green); border-radius:3px 3px 0 0; }
+  .bar .b-ko{ background:var(--red); opacity:.75; }
+  .bar-labels{ display:flex; justify-content:space-between; font-size:.7rem; color:var(--ink-soft); }
+  .mini-row{ display:flex; align-items:center; gap:10px; padding:4px 0; font-size:.88rem; }
+  .mini-row .nm{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .mini-row .nm small{ color:var(--ink-soft); }
+  .mini-row .val{ font-family:'JetBrains Mono'; font-size:.78rem; color:var(--ink-soft); white-space:nowrap; }
+  .mini-track{ width:90px; height:6px; border-radius:4px; background:var(--line); overflow:hidden; flex:none; }
+  .mini-track > span{ display:block; height:100%; background:var(--green); }
   .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 </style>
 
@@ -591,17 +610,10 @@
       </button>
     </div>
     <div class="settings">
-      <span>Réglage parent : un mot est acquis après</span>
-      <div class="stepper">
-        <button type="button" id="targetMinus" aria-label="Diminuer">−</button>
-        <output id="targetValue" aria-live="polite">3</output>
-        <button type="button" id="targetPlus" aria-label="Augmenter">+</button>
-      </div>
-      <span id="targetRange">exercices réussis</span>
-    </div>
-    <div class="settings" style="margin-top:10px;border-top:none;padding-top:0;">
-      <span>Profil :</span><strong id="profileName">eleve</strong>
+      <span>Profil :</span><strong id="profileName"></strong>
       <button type="button" class="btn btn-ghost" id="btnProfile" style="padding:5px 12px;font-size:.82rem;">Changer</button>
+      <button type="button" class="btn btn-ghost" id="btnSounds" style="padding:5px 12px;font-size:.82rem;" aria-pressed="true">Sons : oui</button>
+      <button type="button" class="btn btn-ghost" id="btnParent" style="padding:5px 12px;font-size:.82rem;">Espace parent</button>
     </div>
   </section>
 
@@ -730,6 +742,62 @@
     <div class="stage" id="aventureStage"></div>
   </section>
 
+  <!-- CONNEXION -->
+  <section class="page" data-screen="login">
+    <div class="page-head">
+      <p class="eyebrow" id="loginEyebrow">Connexion</p>
+      <h2 class="page-title" id="loginTitle">Compte parent</h2>
+      <p class="lede" id="loginLede">Connecte-toi une fois sur cet appareil : les enfants choisiront ensuite leur profil.</p>
+    </div>
+    <form id="loginForm">
+      <div class="field"><label for="loginUser">Identifiant</label><input type="text" id="loginUser" autocomplete="username" autocapitalize="off" required></div>
+      <div class="field"><label for="loginPass">Mot de passe</label><input type="password" id="loginPass" autocomplete="current-password" required></div>
+      <div class="field" id="loginPass2Row" hidden><label for="loginPass2">Confirme le mot de passe</label><input type="password" id="loginPass2" autocomplete="new-password"><span class="hint">8 caractères au minimum.</span></div>
+      <div class="row-actions" style="justify-content:flex-start;"><button type="submit" class="btn btn-primary" id="loginBtn">Se connecter</button></div>
+      <p class="hint" id="loginMsg" style="color:var(--red);min-height:1.2em;"></p>
+    </form>
+  </section>
+
+  <!-- CHOIX DU PROFIL -->
+  <section class="page" data-screen="profiles">
+    <div class="page-head">
+      <p class="eyebrow">Qui joue ?</p>
+      <h2 class="page-title">Choisis ton profil</h2>
+    </div>
+    <div class="lists" id="profilesBox"></div>
+    <div class="row-actions" style="margin-top:16px;"><button class="btn btn-ghost" id="btnParentFromProfiles">Espace parent</button></div>
+  </section>
+
+  <!-- ESPACE PARENT : MOT DE PASSE -->
+  <section class="page" data-screen="parentLock">
+    <button class="backlink" id="lockBack">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour
+    </button>
+    <div class="page-head">
+      <p class="eyebrow">Espace parent</p>
+      <h2 class="page-title">Retape ton mot de passe</h2>
+    </div>
+    <form id="lockForm">
+      <div class="field"><label for="lockPass">Mot de passe du compte parent</label><input type="password" id="lockPass" autocomplete="current-password" required></div>
+      <div class="row-actions" style="justify-content:flex-start;"><button type="submit" class="btn btn-primary">Ouvrir</button></div>
+      <p class="hint" id="lockMsg" style="color:var(--red);min-height:1.2em;"></p>
+    </form>
+  </section>
+
+  <!-- ESPACE PARENT -->
+  <section class="page" data-screen="parent">
+    <button class="backlink" id="parentBack">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Quitter l'espace parent
+    </button>
+    <div class="page-head">
+      <p class="eyebrow">Espace parent</p>
+      <h2 class="page-title">Profils, suivi et réglages</h2>
+    </div>
+    <div id="parentBox"></div>
+  </section>
+
   <!-- RESULTS -->
   <section class="page" data-screen="results">
     <div class="page-head" style="text-align:center;">
@@ -813,7 +881,7 @@
 (function(){
   'use strict';
 
-  var STORAGE_KEY = 'cahierMalin_v1_' + (function(){ try{ return localStorage.getItem('cahierMalin_profil') || 'eleve'; }catch(e){ return 'eleve'; } })();
+  var STORAGE_KEY = 'cahierMalin_v2_' + (function(){ try{ return localStorage.getItem('cahierMalin_pid') || '0'; }catch(e){ return '0'; } })();
   var ROUND_SIZE = 10;
   var MIN_LIST_WORDS = 6;
 
@@ -879,14 +947,19 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(pushState, 400);
   }
-  function profileName(){
-    try{ return localStorage.getItem('cahierMalin_profil') || 'eleve'; }catch(e){ return 'eleve'; }
+  function currentPid(){
+    try{ return parseInt(localStorage.getItem('cahierMalin_pid'), 10) || 0; }catch(e){ return 0; }
   }
+  var me = null, appStarted = false;
   function apiFetch(path, opts){
     opts = opts || {};
-    opts.headers = Object.assign({ 'Content-Type':'application/json', 'X-Profil': encodeURIComponent(profileName()) }, opts.headers || {});
+    opts.headers = Object.assign({ 'Content-Type':'application/json', 'X-Profil': String(currentPid()) }, opts.headers || {});
     return fetch(path, opts).then(function(r){
-      if(!r.ok) return r.json().catch(function(){ return {}; }).then(function(j){ throw new Error(j.error || 'Erreur serveur'); });
+      if(!r.ok) return r.json().catch(function(){ return {}; }).then(function(j){
+        var e = new Error(j.error || 'Erreur serveur'); e.status = r.status; e.data = j;
+        if(r.status === 401 && j.login && appStarted) location.reload(); // session expiree
+        throw e;
+      });
       return r.json();
     });
   }
@@ -904,7 +977,6 @@
       serverLoaded = true;
       if(!s.exists) return pushState();
     }).then(function(){
-      $('#targetValue').textContent = targetCount();
       updateStarStamp(); renderHome();
       if(nav.screen !== 'home') goto('home');
     }).catch(function(){});
@@ -1066,7 +1138,7 @@
   function fetchAudio(text, slow){
     var k = (slow ? 's|' : 'n|') + text;
     if(audioCache[k]) return audioCache[k];
-    var p = fetch('api/tts?text=' + encodeURIComponent(text) + (slow ? '&slow=1' : ''), { headers:{ 'X-Profil': encodeURIComponent(profileName()) } })
+    var p = fetch('api/tts?text=' + encodeURIComponent(text) + (slow ? '&slow=1' : ''))
       .then(function(r){ if(!r.ok) throw new Error('voix'); return r.blob(); })
       .then(function(b){ return URL.createObjectURL(b); });
     audioCache[k] = p;
@@ -1345,6 +1417,53 @@
     else if(mode==='safe') { goto('safe'); renderSafe(); }
   }
 
+  /* ---------------- sons de reussite (Web Audio, rien a telecharger) ---------------- */
+  var soundsOn = (function(){ try{ return localStorage.getItem('cahierMalin_sons') !== '0'; }catch(e){ return true; } })();
+  var actx = null;
+  function tone(freq, at, dur, type, vol){
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, actx.currentTime + at);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, actx.currentTime + at + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + at + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(actx.currentTime + at); o.stop(actx.currentTime + at + dur + 0.05);
+  }
+  function playSound(kind){
+    if(!soundsOn) return;
+    try{
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if(actx.state === 'suspended') actx.resume();
+      if(kind === 'ok'){ tone(660, 0, .12); tone(880, .1, .18); }
+      else if(kind === 'no'){ tone(260, 0, .18, 'triangle', .12); tone(200, .14, .25, 'triangle', .12); }
+      else if(kind === 'win'){ [523, 659, 784, 1047].forEach(function(f, i){ tone(f, i*.12, .22); }); }
+    }catch(e){}
+  }
+  function updateSoundsBtn(){
+    var b = $('#btnSounds');
+    b.textContent = 'Sons : ' + (soundsOn ? 'oui' : 'non');
+    b.setAttribute('aria-pressed', soundsOn ? 'true' : 'false');
+  }
+
+  /* ---------------- journal des essais (suivi des parents) ---------------- */
+  var evQueue = [], evTimer = null;
+  function logEvent(word, ok){
+    var l = getList(nav.listId);
+    if(!l) return;
+    evQueue.push({ at:Date.now(), kind:nav.kind, list:l.name, mode:nav.mode, word:word, ok:!!ok });
+    if(evQueue.length > 200) evQueue.shift();
+    clearTimeout(evTimer);
+    evTimer = setTimeout(flushEvents, 2000);
+  }
+  function flushEvents(keepalive){
+    if(!evQueue.length || !serverLoaded) return;
+    var batch = evQueue.splice(0, 50);
+    var opts = { method:'POST', body: JSON.stringify({ events: batch }) };
+    if(keepalive === true) opts.keepalive = true;
+    apiFetch('api/events', opts).then(function(){ if(evQueue.length) flushEvents(); }).catch(function(){ evQueue = batch.concat(evQueue); });
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') flushEvents(true); });
+
   function recordAttempt(word, correct){
     var p = wordProgress(nav.listId, word);
     var wasAcquired = isAcquired(nav.listId, word);
@@ -1354,6 +1473,8 @@
       else { p.lastWrong = true; p.wrongCount = (p.wrongCount||0)+1; }
     }
     if(correct){ state.stars++; }
+    playSound(correct ? 'ok' : 'no');
+    logEvent(word, correct);
     nav.results.push({ word:word, correct:correct, acquired: !wasAcquired && isAcquired(nav.listId, word) });
     saveState();
     updateStarStamp();
@@ -1367,7 +1488,7 @@
   function finishRound(){
     var okCount = nav.results.filter(function(r){ return r.correct; }).length;
     var bonus = (okCount === nav.results.length && nav.results.length>0) ? 2 : 0;
-    if(bonus){ state.stars += bonus; updateStarStamp(); saveState(); }
+    if(bonus){ state.stars += bonus; updateStarStamp(); saveState(); playSound('win'); }
     $('#resultsTitle').textContent = okCount===nav.results.length ? 'Sans faute, bravo !' : 'Bien joué !';
     $('#resultsTally').textContent = '+' + (okCount+bonus) + ' étoile' + ((okCount+bonus)>1?'s':'');
     var list = $('#resultsList'); list.innerHTML = '';
@@ -2459,11 +2580,13 @@
   }).join('');
   $('#declConj').addEventListener('change', function(){ $('#declTemps').hidden = !this.checked; });
 
-  apiFetch('api/config').then(function(c){
-    serverCfg = c;
-    if(c.gemini) $('#btnPhrases').hidden = false;
-    if(nav.screen === 'dashboard') renderDashboard();
-  }).catch(function(){});
+  function loadConfig(){
+    return apiFetch('api/config').then(function(c){
+      serverCfg = c;
+      if(c.gemini) $('#btnPhrases').hidden = false;
+      if(nav.screen === 'dashboard') renderDashboard();
+    }).catch(function(){});
+  }
   $('#btnPhrases').addEventListener('click', function(){
     var lines = currentLines();
     var need = lines.filter(function(l){ return !parseConjLine(l) && l.indexOf(';') === -1; });
@@ -2580,6 +2703,7 @@
   /* ---------------- navigation ---------------- */
   function goto(screen){
     nav.screen = screen;
+    $('.progress-cluster').style.display = GATE_SCREENS.indexOf(screen) !== -1 ? 'none' : '';
     $all('.page').forEach(function(p){ p.classList.toggle('active', p.dataset.screen===screen); });
     updateRankChip();
     window.scrollTo(0,0);
@@ -2599,34 +2723,345 @@
   $('#segLearn').addEventListener('click', function(){ nav.reviewAll = false; renderDashboard(); });
   $('#segAll').addEventListener('click', function(){ nav.reviewAll = true; renderDashboard(); });
 
-  function setTarget(n){
-    state.settings.target = Math.max(1, Math.min(MODE_IDS.length, n));
-    saveState();
-    $('#targetValue').textContent = targetCount();
-    renderHome();
-    updateStarStamp();
-  }
-  $('#targetMinus').addEventListener('click', function(){ setTarget(targetCount() - 1); });
-  $('#targetPlus').addEventListener('click', function(){ setTarget(targetCount() + 1); });
 
-  /* ---------------- profil ---------------- */
-  $('#profileName').textContent = profileName();
+  /* ---------------- connexion, profils ---------------- */
+  var GATE_SCREENS = ['login','profiles','parentLock','parent'];
+  function showLogin(needsSetup){
+    $('#loginEyebrow').textContent = needsSetup ? 'Première utilisation' : 'Connexion';
+    $('#loginTitle').textContent = needsSetup ? 'Crée le compte parent' : 'Compte parent';
+    $('#loginBtn').textContent = needsSetup ? 'Créer le compte' : 'Se connecter';
+    $('#loginPass2Row').hidden = !needsSetup;
+    $('#loginPass').setAttribute('autocomplete', needsSetup ? 'new-password' : 'current-password');
+    $('#loginForm').dataset.setup = needsSetup ? '1' : '';
+    goto('login');
+  }
+  $('#loginForm').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var setup = !!$('#loginForm').dataset.setup, msg = $('#loginMsg');
+    msg.textContent = '';
+    if(setup && $('#loginPass').value !== $('#loginPass2').value){ msg.textContent = 'Les deux mots de passe sont différents.'; return; }
+    apiFetch(setup ? 'api/setup' : 'api/login', { method:'POST', body: JSON.stringify({ username:$('#loginUser').value.trim(), password:$('#loginPass').value }) })
+      .then(function(){ location.reload(); })
+      .catch(function(e){ msg.textContent = e.message; });
+  });
+  function chooseProfile(id){
+    try{ localStorage.setItem('cahierMalin_pid', String(id)); }catch(e){}
+    location.reload();
+  }
+  function showProfiles(){
+    var box = $('#profilesBox');
+    box.innerHTML = '';
+    me.profiles.forEach(function(p){
+      var card = el('button',{class:'list-card', type:'button', style:'width:100%;text-align:left;cursor:pointer;'});
+      card.innerHTML = '<div class="info"><h3>' + escapeHtml(p.name) + '</h3></div>';
+      card.addEventListener('click', function(){ chooseProfile(p.id); });
+      box.appendChild(card);
+    });
+    goto('profiles');
+  }
   $('#btnProfile').addEventListener('click', function(){
-    var n = window.prompt('Prénom du profil (les listes et la progression sont gardées par profil) :', profileName());
-    if(n === null) return;
-    n = n.trim();
-    if(!/^[A-Za-zÀ-ÿ0-9 _-]{1,30}$/.test(n)){ toast('Profil invalide (30 caractères, lettres et chiffres).'); return; }
-    try{ localStorage.setItem('cahierMalin_profil', n); }catch(e){}
+    try{ localStorage.removeItem('cahierMalin_pid'); }catch(e){}
     location.reload();
   });
+  $('#btnSounds').addEventListener('click', function(){
+    soundsOn = !soundsOn;
+    try{ localStorage.setItem('cahierMalin_sons', soundsOn ? '1' : '0'); }catch(e){}
+    updateSoundsBtn();
+    playSound('ok');
+  });
+  $('#btnParent').addEventListener('click', openParent);
+  $('#btnParentFromProfiles').addEventListener('click', openParent);
 
-  /* ---------------- init ---------------- */
-  $('#targetValue').textContent = targetCount();
-  $('#targetRange').textContent = 'exercices réussis (de 1 à ' + MODE_IDS.length + ')';
-  updateStarStamp();
-  renderHome();
-  goto('home');
-  syncFromServer();
+  /* ---------------- espace parent ---------------- */
+  function parentErr(e){
+    if(e.data && e.data.locked){ $('#lockPass').value = ''; $('#lockMsg').textContent = ''; goto('parentLock'); toast('Espace parent verrouillé : retape ton mot de passe.'); }
+    else toast(e.message);
+  }
+  function openParent(){
+    loadConfig();
+    apiFetch('api/me').then(function(m){
+      me = m;
+      if(m.unlocked) renderParent();
+      else { $('#lockPass').value = ''; $('#lockMsg').textContent = ''; goto('parentLock'); $('#lockPass').focus(); }
+    }).catch(function(e){ toast(e.message); });
+  }
+  $('#lockForm').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    apiFetch('api/unlock', { method:'POST', body: JSON.stringify({ password: $('#lockPass').value }) })
+      .then(renderParent).catch(function(e){ $('#lockMsg').textContent = e.message; });
+  });
+  function leaveParent(){
+    apiFetch('api/lock', { method:'POST', body:'{}' }).catch(function(){}).then(function(){
+      if(appStarted) location.reload(); else boot();
+    });
+  }
+  $('#parentBack').addEventListener('click', leaveParent);
+  $('#lockBack').addEventListener('click', function(){ if(appStarted) goto('home'); else boot(); });
+
+  function pcard(title){
+    var d = el('div',{class:'p-card'});
+    d.appendChild(el('h3',{class:'wg-title'}, escapeHtml(title)));
+    return d;
+  }
+  function pbtn(label, cls, fn){
+    var b = el('button',{type:'button', class:'btn ' + (cls || 'btn-ghost') + ' p-btn'}, escapeHtml(label));
+    b.addEventListener('click', fn);
+    return b;
+  }
+  function renderParent(){
+    goto('parent');
+    var box = $('#parentBox');
+    box.innerHTML = '<p class="wg-empty">Chargement…</p>';
+    Promise.all([apiFetch('api/parent/profiles'), apiFetch('api/me')]).then(function(res){
+      var profiles = res[0].profiles; me = res[1];
+      box.innerHTML = '';
+      box.appendChild(parentProfiles(profiles));
+      box.appendChild(el('div',{id:'suiviBox'}));
+      if(profiles.some(function(p){ return p.lists.length; }) && profiles.length > 1) box.appendChild(parentCopy(profiles));
+      box.appendChild(parentVoice());
+      box.appendChild(parentAccount());
+      if(me.user.isAdmin) box.appendChild(parentUsers());
+    }).catch(parentErr);
+  }
+  function parentProfiles(profiles){
+    var card = pcard('Profils des enfants');
+    profiles.forEach(function(p){
+      var row = el('div',{class:'p-profile'});
+      var line1 = el('div',{class:'p-row'});
+      var name = el('input',{type:'text', value:p.name, maxlength:'30', 'aria-label':'Prénom'});
+      line1.appendChild(name);
+      line1.appendChild(pbtn('Renommer', 'btn-ghost', function(){
+        apiFetch('api/parent/profiles/' + p.id, { method:'PATCH', body: JSON.stringify({ name:name.value }) }).then(function(){ toast('Prénom modifié.'); }).catch(parentErr);
+      }));
+      row.appendChild(line1);
+      var line2 = el('div',{class:'p-row'}, '<span>Un mot est acquis après</span>');
+      line2.appendChild(stepperEl(p.target, 1, MODE_IDS.length, function(v){
+        apiFetch('api/parent/profiles/' + p.id + '/settings', { method:'PUT', body: JSON.stringify({ target:v }) }).catch(parentErr);
+      }));
+      line2.appendChild(el('span',{}, 'jeux réussis'));
+      row.appendChild(line2);
+      row.appendChild(el('div',{class:'p-row'}, '<span style="color:var(--ink-soft)">' + p.lists.length + ' liste' + (p.lists.length>1?'s':'') + '</span>'));
+      var line3 = el('div',{class:'p-row'});
+      line3.appendChild(pbtn('Suivi', 'btn-primary', function(){ renderSuivi(p); }));
+      line3.appendChild(pbtn('Exporter', 'btn-ghost', function(){ downloadExport(p); }));
+      var file = el('input',{type:'file', accept:'application/json,.json', hidden:'true'});
+      file.addEventListener('change', function(){ importFile(p, file.files[0]); });
+      line3.appendChild(pbtn('Importer', 'btn-ghost', function(){ file.click(); }));
+      line3.appendChild(file);
+      line3.appendChild(pbtn('Supprimer', 'btn-danger', function(){
+        if(!window.confirm('Supprimer le profil « ' + p.name + ' » avec toutes ses listes et sa progression ?')) return;
+        apiFetch('api/parent/profiles/' + p.id, { method:'DELETE', body:'{}' }).then(function(){
+          try{ if(currentPid() === p.id) localStorage.removeItem('cahierMalin_pid'); }catch(e){}
+          renderParent();
+        }).catch(parentErr);
+      }));
+      row.appendChild(line3);
+      card.appendChild(row);
+    });
+    var add = el('div',{class:'p-row',style:'margin-top:8px;'});
+    var nn = el('input',{type:'text', placeholder:'Nouveau profil (prénom)', maxlength:'30', 'aria-label':'Nouveau profil'});
+    add.appendChild(nn);
+    add.appendChild(pbtn('Ajouter', 'btn-primary', function(){
+      apiFetch('api/parent/profiles', { method:'POST', body: JSON.stringify({ name:nn.value }) }).then(renderParent).catch(parentErr);
+    }));
+    card.appendChild(add);
+    return card;
+  }
+  function downloadExport(p){
+    fetch('api/parent/profiles/' + p.id + '/export').then(function(r){
+      if(!r.ok) throw new Error('Export impossible.');
+      return r.blob();
+    }).then(function(b){
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'cahier-malin-' + p.name.replace(/[^A-Za-z0-9À-ÿ_-]+/g, '_') + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+    }).catch(function(e){ toast(e.message); });
+  }
+  function importFile(p, f){
+    if(!f) return;
+    f.text().then(function(txt){
+      var data; try{ data = JSON.parse(txt); }catch(e){ throw new Error('Fichier illisible.'); }
+      return apiFetch('api/parent/profiles/' + p.id + '/import', { method:'POST', body: JSON.stringify(data) });
+    }).then(function(r){ toast(r.added + ' liste' + (r.added>1?'s ajoutées':' ajoutée') + ' à ' + p.name + '.'); renderParent(); })
+      .catch(parentErr);
+  }
+  function parentCopy(profiles){
+    var card = pcard('Copier une liste vers un autre profil');
+    var row = el('div',{class:'p-row'});
+    var from = el('select',{'aria-label':'Profil source'}), lst = el('select',{'aria-label':'Liste'}), to = el('select',{'aria-label':'Profil destinataire'});
+    profiles.forEach(function(p){ from.appendChild(el('option',{value:p.id}, escapeHtml(p.name))); to.appendChild(el('option',{value:p.id}, escapeHtml(p.name))); });
+    function fillLists(){
+      var p = profiles.filter(function(x){ return String(x.id) === from.value; })[0];
+      lst.innerHTML = '';
+      p.lists.forEach(function(l){ lst.appendChild(el('option',{value:l.id}, escapeHtml(l.name) + ' (' + l.mots + ')')); });
+    }
+    from.addEventListener('change', fillLists);
+    fillLists();
+    if(profiles.length > 1) to.selectedIndex = 1;
+    row.appendChild(from); row.appendChild(lst); row.appendChild(el('span',{}, '→')); row.appendChild(to);
+    row.appendChild(pbtn('Copier', 'btn-primary', function(){
+      apiFetch('api/parent/copy', { method:'POST', body: JSON.stringify({ from:from.value, to:to.value, listId:lst.value }) })
+        .then(function(){ toast('Liste copiée.'); renderParent(); }).catch(parentErr);
+    }));
+    card.appendChild(row);
+    return card;
+  }
+  function parentVoice(){
+    var card = pcard('Voix de lecture');
+    if(!serverCfg.tts){
+      card.appendChild(el('p',{class:'wg-empty'}, 'La voix du serveur demande une clé Gemini : sans elle, la voix de l\'appareil est utilisée.'));
+      return card;
+    }
+    var row = el('div',{class:'p-row'});
+    var sel = el('select',{'aria-label':'Voix'});
+    (me.voices || []).forEach(function(v){ var o = el('option',{value:v}, escapeHtml(v)); if(v === me.user.voice) o.selected = true; sel.appendChild(o); });
+    row.appendChild(sel);
+    row.appendChild(pbtn('Écouter', 'btn-ghost', function(){
+      apiFetch('api/parent/voice', { method:'PUT', body: JSON.stringify({ voice:sel.value }) }).then(function(){
+        me.user.voice = sel.value;
+        speak('Bonjour, je vais lire les mots de la dictée.');
+      }).catch(parentErr);
+    }));
+    card.appendChild(row);
+    card.appendChild(el('p',{class:'wg-empty'}, 'La voix choisie est enregistrée en cliquant sur « Écouter ».'));
+    return card;
+  }
+  function parentAccount(){
+    var card = pcard('Compte « ' + me.user.username + ' »');
+    var row = el('div',{class:'p-row'});
+    var o = el('input',{type:'password', placeholder:'Mot de passe actuel', autocomplete:'current-password'});
+    var n = el('input',{type:'password', placeholder:'Nouveau (8 car. min.)', autocomplete:'new-password'});
+    row.appendChild(o); row.appendChild(n);
+    row.appendChild(pbtn('Changer', 'btn-ghost', function(){
+      apiFetch('api/parent/password', { method:'PUT', body: JSON.stringify({ old:o.value, password:n.value }) })
+        .then(function(){ o.value = ''; n.value = ''; toast('Mot de passe modifié.'); }).catch(parentErr);
+    }));
+    card.appendChild(row);
+    var out = el('div',{class:'p-row',style:'margin-top:8px;'});
+    out.appendChild(pbtn('Se déconnecter de cet appareil', 'btn-danger', function(){
+      apiFetch('api/logout', { method:'POST', body:'{}' }).then(function(){
+        try{ localStorage.removeItem('cahierMalin_pid'); }catch(e){}
+        location.reload();
+      });
+    }));
+    card.appendChild(out);
+    return card;
+  }
+  function parentUsers(){
+    var card = pcard('Autres comptes parents (administrateur)');
+    var list = el('div');
+    card.appendChild(list);
+    function load(){
+      apiFetch('api/parent/users').then(function(r){
+        list.innerHTML = '';
+        r.users.forEach(function(u){
+          var row = el('div',{class:'mini-row'});
+          row.innerHTML = '<span class="nm">' + escapeHtml(u.username) + (u.isAdmin ? ' <small>administrateur</small>' : '') + ' <small>· ' + u.profiles + ' profil' + (u.profiles>1?'s':'') + '</small></span>';
+          if(!u.isAdmin){
+            row.appendChild(pbtn('Supprimer', 'btn-danger', function(){
+              if(!window.confirm('Supprimer le compte « ' + u.username + ' » et tous ses profils ?')) return;
+              apiFetch('api/parent/users/' + u.id, { method:'DELETE', body:'{}' }).then(load).catch(parentErr);
+            }));
+          }
+          list.appendChild(row);
+        });
+      }).catch(parentErr);
+    }
+    load();
+    var add = el('div',{class:'p-row',style:'margin-top:8px;'});
+    var u = el('input',{type:'text', placeholder:'Identifiant', autocapitalize:'off', autocomplete:'off'});
+    var p = el('input',{type:'password', placeholder:'Mot de passe (8 car. min.)', autocomplete:'new-password'});
+    add.appendChild(u); add.appendChild(p);
+    add.appendChild(pbtn('Créer le compte', 'btn-primary', function(){
+      apiFetch('api/parent/users', { method:'POST', body: JSON.stringify({ username:u.value.trim(), password:p.value }) })
+        .then(function(){ u.value = ''; p.value = ''; toast('Compte créé.'); load(); }).catch(parentErr);
+    }));
+    card.appendChild(add);
+    return card;
+  }
+
+  /* ---------------- suivi ---------------- */
+  function modeTitle(id){ var d = MODE_DEFS.filter(function(m){ return m.id === id; })[0]; return d ? d.title : id; }
+  function pct(ok, n){ return n ? Math.round(ok / n * 100) : 0; }
+  function renderSuivi(p){
+    apiFetch('api/parent/profiles/' + p.id + '/suivi').then(function(d){
+      var box = $('#suiviBox');
+      box.innerHTML = '';
+      var card = pcard('Suivi de ' + p.name);
+      if(!d.total.n){
+        card.appendChild(el('p',{class:'wg-empty'}, 'Aucun exercice enregistré pour le moment.'));
+        box.appendChild(card); box.scrollIntoView({ behavior:'smooth' });
+        return;
+      }
+      var last = d.total.last ? new Date(d.total.last).toLocaleDateString('fr-FR', { day:'numeric', month:'long' }) : '';
+      card.appendChild(el('p',{class:'wg-empty'}, d.total.n + ' réponses sur 90 jours, ' + pct(d.total.ok, d.total.n) + ' % de réussite. Dernière séance : ' + escapeHtml(last) + '.'));
+      var max = Math.max.apply(null, d.days.map(function(x){ return x.n; })) || 1;
+      var bars = el('div',{class:'bars', role:'img', 'aria-label':'Réponses des 14 derniers jours'});
+      d.days.forEach(function(x){
+        var b = el('div',{class:'bar', title: x.d + ' : ' + x.n + ' réponse' + (x.n>1?'s':'') + ', ' + x.ok + ' juste' + (x.ok>1?'s':'')});
+        var h = Math.round(x.n / max * 100);
+        b.innerHTML = '<span class="b-ko" style="height:' + Math.round(h * (x.n - x.ok) / (x.n || 1)) + '%"></span><span class="b-ok" style="height:' + Math.round(h * x.ok / (x.n || 1)) + '%"></span>';
+        bars.appendChild(b);
+      });
+      card.appendChild(bars);
+      card.appendChild(el('div',{class:'bar-labels'}, '<span>il y a 14 jours</span><span>aujourd\'hui</span>'));
+      card.appendChild(el('h3',{class:'wg-title',style:'margin-top:14px;'}, 'Par jeu'));
+      d.jeux.forEach(function(j){
+        var r = pct(j.ok, j.n), row = el('div',{class:'mini-row'});
+        row.innerHTML = '<span class="nm">' + escapeHtml(modeTitle(j.mode)) + '</span><span class="mini-track"><span style="width:' + r + '%"></span></span><span class="val">' + r + ' % · ' + j.n + '</span>';
+        card.appendChild(row);
+      });
+      card.appendChild(el('h3',{class:'wg-title',style:'margin-top:14px;'}, 'Mots à revoir'));
+      if(!d.mots.length) card.appendChild(el('p',{class:'wg-empty'}, 'Aucune erreur enregistrée.'));
+      d.mots.forEach(function(m){
+        var row = el('div',{class:'mini-row'});
+        row.innerHTML = '<span class="nm">' + escapeHtml(m.word) + ' <small>' + escapeHtml(m.list) + '</small></span><span class="val">' + m.ko + ' erreur' + (m.ko>1?'s':'') + ' / ' + m.n + '</span>';
+        card.appendChild(row);
+      });
+      card.appendChild(el('h3',{class:'wg-title',style:'margin-top:14px;'}, 'Listes (acquis après ' + d.target + ' jeux réussis)'));
+      d.listes.forEach(function(l){
+        var row = el('div',{class:'mini-row'});
+        row.innerHTML = '<span class="nm">' + escapeHtml(l.name) + '</span><span class="mini-track"><span style="width:' + pct(l.acquis, l.mots) + '%"></span></span><span class="val">' + l.acquis + ' / ' + l.mots + '</span>';
+        card.appendChild(row);
+      });
+      box.appendChild(card);
+      box.scrollIntoView({ behavior:'smooth' });
+    }).catch(parentErr);
+  }
+
+  /* ---------------- demarrage ---------------- */
+  function startApp(p){
+    appStarted = true;
+    $('#profileName').textContent = p.name;
+    try{ localStorage.setItem('cahierMalin_pname', p.name); }catch(e){}
+    updateSoundsBtn();
+    updateStarStamp();
+    renderHome();
+    goto('home');
+    loadConfig();
+    syncFromServer();
+    if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
+  function boot(){
+    apiFetch('api/me').then(function(m){
+      me = m;
+      if(!m.user){ showLogin(m.needsSetup); return; }
+      var pid = currentPid();
+      var p = m.profiles.filter(function(x){ return x.id === pid; })[0];
+      if(!p && m.profiles.length === 1){ chooseProfile(m.profiles[0].id); return; }
+      if(!p){ showProfiles(); return; }
+      startApp(p);
+    }).catch(function(e){
+      if(e && e.status){ console.error(e); $('#loginMsg').textContent = e.message; showLogin(false); return; }
+      // serveur injoignable : on reprend la copie de cet appareil si elle existe
+      var cached = null;
+      try{ cached = localStorage.getItem(STORAGE_KEY) && currentPid() ? localStorage.getItem('cahierMalin_pname') || 'Élève' : null; }catch(e){}
+      if(cached) startApp({ id:currentPid(), name:cached });
+      else { $('#loginMsg').textContent = 'Serveur injoignable.'; showLogin(false); }
+    });
+  }
+  boot();
 })();
 </script>
 

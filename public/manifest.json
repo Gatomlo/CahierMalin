@@ -1,0 +1,15 @@
+{
+  "name": "Le Cahier Malin",
+  "short_name": "Cahier Malin",
+  "description": "Entraînement aux mots de dictée",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F0E8D6",
+  "theme_color": "#26415F",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

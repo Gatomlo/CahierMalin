@@ -10,8 +10,11 @@ const http = require('http');
 process.env.CAHIER_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'cahier-'));
 delete process.env.GEMINI_API_KEY;
 
+const dbm = require('../lib/db');
+// Profil libre d'avant les comptes : doit etre repris par le premier compte
+dbm.saveState('lea', { lists: [{ id: 'old', name: 'Ancienne', words: [{ w: 'maison', s: '' }] }], stars: 7 });
 const app = require('../server');
-let base, fake, srv, fakeCalls = 0, ttsCalls = 0;
+let base, cookie = '', PID_OLD, PID_NEW, fake, srv, fakeCalls = 0, ttsCalls = 0;
 
 test.before(async () => {
   fake = http.createServer((req, res) => {
@@ -40,10 +43,18 @@ test.before(async () => {
   });
   await new Promise((r) => fake.listen(0, r));
   await new Promise((r) => { srv = app.listen(0, () => { base = `http://127.0.0.1:${srv.address().port}`; r(); }); });
+  // premier compte (administrateur), puis espace parent et un profil neuf
+  const setup = await fetch(base + '/api/setup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: 'parent', password: 'motdepasse1' }) });
+  assert.equal(setup.status, 200);
+  cookie = setup.headers.get('set-cookie').split(';')[0];
+  const me = await (await call('/api/me', { headers: { 'x-profil': '0' } })).json();
+  PID_OLD = me.profiles[0].id;
+  await call('/api/unlock', { method: 'POST', body: JSON.stringify({ password: 'motdepasse1' }) });
+  PID_NEW = (await (await call('/api/parent/profiles', { method: 'POST', body: JSON.stringify({ name: 'Neuf' }) })).json()).id;
 });
 test.after(() => { if (fake) fake.close(); if (srv) srv.close(); });
 
-const call = (p, opts = {}) => fetch(base + p, { ...opts, headers: { 'content-type': 'application/json', 'x-profil': 'Léa', ...(opts.headers || {}) } });
+const call = (p, opts = {}) => fetch(base + p, { ...opts, headers: { 'content-type': 'application/json', cookie, 'x-profil': String(PID_NEW), ...(opts.headers || {}) } });
 
 test('racine sans slash redirigee, page servie', async () => {
   const r = await fetch(base + '/', { redirect: 'manual' });
@@ -51,9 +62,10 @@ test('racine sans slash redirigee, page servie', async () => {
   assert.match(await r.text(), /Cahier Malin/);
 });
 
-test('profil obligatoire', async () => {
-  const r = await fetch(base + '/api/state');
-  assert.equal(r.status, 400);
+test('connexion obligatoire, profil du compte obligatoire', async () => {
+  assert.equal((await fetch(base + '/api/state', { headers: { 'x-profil': String(PID_NEW) } })).status, 401);
+  assert.equal((await call('/api/state', { headers: { 'x-profil': '9999' } })).status, 400);
+  assert.equal((await fetch(base + '/api/state', { method: 'PUT', headers: { cookie, 'x-profil': String(PID_NEW) }, body: '{}' })).status, 415);
 });
 
 test('etat : vide puis sauvegarde puis relecture, par profil', async () => {
@@ -66,8 +78,9 @@ test('etat : vide puis sauvegarde puis relecture, par profil', async () => {
   assert.equal(s.lists[0].words[0].w, 'maison');
   assert.equal(s.stars, 5);
   assert.equal(s.settings.target, 2);
-  const autre = await (await call('/api/state', { headers: { 'x-profil': 'Tom' } })).json();
-  assert.equal(autre.exists, false);
+  const old = await (await call('/api/state', { headers: { 'x-profil': String(PID_OLD) } })).json();
+  assert.equal(old.lists[0].name, 'Ancienne'); // profil d'avant les comptes repris
+  assert.equal(old.stars, 7);
   const bad = await call('/api/state', { method: 'PUT', body: JSON.stringify({ lists: [{ id: 1 }] }) });
   assert.equal(bad.status, 400);
 });
@@ -145,4 +158,65 @@ test('voix : cache disque, WAV valide, repli sans cle', async () => {
   await (await call('/api/tts?text=' + encodeURIComponent('Bonjour les enfants'))).arrayBuffer();
   assert.equal(ttsCalls, 1); // la seconde lecture vient du cache
   delete process.env.GEMINI_API_KEY;
+});
+
+test('comptes : connexion, mauvais mot de passe, espace parent verrouille', async () => {
+  const login = (u, p) => fetch(base + '/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+  assert.equal((await login('parent', 'faux')).status, 401);
+  const ok = await login('PARENT', 'motdepasse1');
+  assert.equal(ok.status, 200);
+  const ck = ok.headers.get('set-cookie').split(';')[0];
+  assert.match(ok.headers.get('set-cookie'), /HttpOnly/);
+  const h = { 'content-type': 'application/json', cookie: ck };
+  assert.equal((await fetch(base + '/api/parent/profiles', { headers: h })).status, 403); // verrouille
+  assert.equal((await fetch(base + '/api/unlock', { method: 'POST', headers: h, body: JSON.stringify({ password: 'faux' }) })).status, 401);
+  assert.equal((await fetch(base + '/api/unlock', { method: 'POST', headers: h, body: JSON.stringify({ password: 'motdepasse1' }) })).status, 200);
+  assert.equal((await fetch(base + '/api/parent/profiles', { headers: h })).status, 200);
+  assert.equal((await fetch(base + '/api/setup', { method: 'POST', headers: h, body: JSON.stringify({ username: 'autre', password: 'motdepasse1' }) })).status, 409);
+});
+
+test('parent : reglage cible protege, suivi, copie, export/import', async () => {
+  const r = await call('/api/parent/profiles/' + PID_NEW + '/settings', { method: 'PUT', body: JSON.stringify({ target: 5 }) });
+  assert.equal(r.status, 200);
+  const st = await (await call('/api/state')).json();
+  st.settings = { target: 1 };
+  await call('/api/state', { method: 'PUT', body: JSON.stringify(st) });
+  assert.equal((await (await call('/api/state')).json()).settings.target, 5); // l'enfant ne le change pas
+  const events = [{ word: 'maison', mode: 'quiz', list: 'Dictée 1', ok: false }, { word: 'maison', mode: 'flash', list: 'Dictée 1', ok: true }, { word: 'maison', mode: 'zzz', list: 'x', ok: true }];
+  assert.equal((await call('/api/events', { method: 'POST', body: JSON.stringify({ events }) })).status, 200);
+  const sv = await (await call('/api/parent/profiles/' + PID_NEW + '/suivi')).json();
+  assert.equal(sv.total.n, 2); // le mode inconnu est ecarte
+  assert.equal(sv.mots[0].word, 'maison');
+  assert.equal(sv.days.length, 14);
+  assert.equal(sv.days[13].n, 2);
+  const lid = st.lists[0].id;
+  assert.equal((await call('/api/parent/copy', { method: 'POST', body: JSON.stringify({ from: PID_NEW, to: PID_OLD, listId: lid }) })).status, 200);
+  const old = await (await call('/api/state', { headers: { 'x-profil': String(PID_OLD) } })).json();
+  assert.equal(old.lists.length, 2);
+  const exp = await (await call('/api/parent/profiles/' + PID_OLD + '/export')).json();
+  assert.equal(exp.format, 'cahier-malin');
+  const imp = await (await call('/api/parent/profiles/' + PID_NEW + '/import', { method: 'POST', body: JSON.stringify(exp) })).json();
+  assert.equal(imp.added, 2);
+  assert.equal((await call('/api/parent/profiles/' + PID_NEW + '/import', { method: 'POST', body: JSON.stringify({ format: 'x' }) })).status, 400);
+});
+
+test('administrateur : autre famille isolee', async () => {
+  const r = await call('/api/parent/users', { method: 'POST', body: JSON.stringify({ username: 'famille2', password: 'motdepasse2' }) });
+  assert.equal(r.status, 200);
+  const login = await fetch(base + '/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: 'famille2', password: 'motdepasse2' }) });
+  const h = { 'content-type': 'application/json', cookie: login.headers.get('set-cookie').split(';')[0] };
+  const me = await (await fetch(base + '/api/me', { headers: h })).json();
+  assert.equal(me.profiles.length, 1);
+  assert.equal((await fetch(base + '/api/state', { headers: { ...h, 'x-profil': String(PID_NEW) } })).status, 400); // pas ses profils
+  await fetch(base + '/api/unlock', { method: 'POST', headers: h, body: JSON.stringify({ password: 'motdepasse2' }) });
+  assert.equal((await fetch(base + '/api/parent/users', { headers: h })).status, 403); // pas administrateur
+  const users = (await (await call('/api/parent/users')).json()).users;
+  assert.equal((await call('/api/parent/users/' + users.find((u) => u.username === 'famille2').id, { method: 'DELETE' })).status, 200);
+});
+
+test('voix : choix par le parent', async () => {
+  assert.equal((await call('/api/parent/voice', { method: 'PUT', body: JSON.stringify({ voice: 'Puck' }) })).status, 200);
+  assert.equal((await call('/api/parent/voice', { method: 'PUT', body: JSON.stringify({ voice: 'Inconnue' }) })).status, 400);
+  const me = await (await call('/api/me')).json();
+  assert.equal(me.user.voice, 'Puck');
 });

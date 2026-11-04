@@ -6,6 +6,9 @@ const express = require('express');
 const db = require('./lib/db');
 const forms = require('./lib/forms');
 const tts = require('./lib/tts');
+const auth = require('./lib/auth');
+const acc = require('./lib/accounts');
+const accountRoutes = require('./lib/routes-account');
 
 if (require.main === module) {
   const fatal = (kind) => (err) => { console.error(`${kind} :`, err); process.exit(1); };
@@ -33,13 +36,22 @@ app.use(express.static(path.join(__dirname, 'public'), { setHeaders: (res) => re
 const api = express.Router();
 api.use(express.json({ limit: '1mb' }));
 api.use((req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
+// Ecritures : JSON obligatoire (un formulaire d'un autre site ne peut pas en envoyer sans autorisation).
+api.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD' && !String(req.get('content-type') || '').includes('application/json')) {
+    return res.status(415).json({ error: 'JSON attendu.' });
+  }
+  next();
+});
+api.use(auth.loadUser);
+api.use(accountRoutes);
 
-// Profil = prenom choisi sur l'appareil (en-tete X-Profil) : pas de compte, ce sont
-// des listes de mots, pas des donnees sensibles.
+// Profil = un enfant du compte connecte (en-tete X-Profil = son numero).
 function profile(req, res, next) {
-  const p = String(req.get('x-profil') || '').trim();
-  if (!/^[\p{L}\p{N} _-]{1,30}$/u.test(p)) return res.status(400).json({ error: 'Profil invalide.' });
-  req.profile = p.toLowerCase();
+  const p = acc.getProfile(req.user.id, parseInt(req.get('x-profil'), 10));
+  if (!p) return res.status(400).json({ error: 'Profil invalide.', profile: true });
+  req.profile = p;
+  req.pkey = acc.key(p.id);
   next();
 }
 
@@ -58,15 +70,33 @@ function checkState(b) {
   return null;
 }
 
-api.get('/state', profile, (req, res) => res.json(db.getState(req.profile)));
-api.put('/state', profile, (req, res) => {
+api.get('/state', auth.requireUser, profile, (req, res) => res.json(db.getState(req.pkey)));
+api.put('/state', auth.requireUser, profile, (req, res) => {
   const err = checkState(req.body);
   if (err) return res.status(400).json({ error: err });
-  db.saveState(req.profile, req.body);
+  // Le reglage "reussites pour acquerir un mot" appartient aux parents : l'enfant ne le modifie pas.
+  const cur = db.getState(req.pkey);
+  const settings = Object.assign({}, req.body.settings || {});
+  if (cur.exists) { if (cur.settings && cur.settings.target) settings.target = cur.settings.target; else delete settings.target; }
+  db.saveState(req.pkey, Object.assign({}, req.body, { settings }));
   res.json({ ok: true });
 });
 
-api.get('/config', (req, res) => res.json({ gemini: forms.hasGemini(), tts: forms.hasGemini(), temps: forms.TEMPS, themes: forms.THEMES }));
+// Journal des essais (suivi des parents) : lots envoyes par l'appareil.
+const MODES = ['flash', 'quiz', 'memory', 'wordsearch', 'scramble', 'safe', 'hangman', 'dictee', 'cloze', 'aventure'];
+api.post('/events', auth.requireUser, profile, (req, res) => {
+  const list = Array.isArray((req.body || {}).events) ? req.body.events.slice(0, 50) : [];
+  const now = Date.now();
+  const events = list.filter((e) => isObj(e) && typeof e.word === 'string' && e.word.length <= 120 && MODES.includes(e.mode)
+    && typeof e.list === 'string').map((e) => ({
+    at: Number.isFinite(e.at) && e.at > now - 7 * 864e5 && e.at <= now + 6e4 ? Math.floor(e.at) : now,
+    kind: e.kind === 'review' ? 'review' : 'learn', list: e.list.slice(0, 120), mode: e.mode, word: e.word, ok: !!e.ok,
+  }));
+  if (events.length) acc.logAttempts(req.profile.id, events);
+  res.json({ ok: true });
+});
+
+api.get('/config', auth.requireUser, (req, res) => res.json({ gemini: forms.hasGemini(), tts: forms.hasGemini(), temps: forms.TEMPS, themes: forms.THEMES }));
 
 // Limite simple : l'IA est payante, on borne les appels (global, par minute).
 let window_ = { start: 0, n: 0 };
@@ -76,31 +106,26 @@ function limit(req, res, next) {
   if (++window_.n > 20) return res.status(429).json({ error: 'Trop de demandes, réessaie dans une minute.' });
   next();
 }
-api.post('/declinaisons', profile, limit, async (req, res, next) => {
-  try {
-    const b = req.body || {};
-    res.json(await forms.decline(b.mots, b.options));
-  } catch (e) { next(e); }
+api.post('/declinaisons', auth.requireUser, limit, async (req, res, next) => {
+  try { const b = req.body || {}; res.json(await forms.decline(b.mots, b.options)); } catch (e) { next(e); }
 });
-
-api.post('/conjugaison', profile, limit, async (req, res, next) => {
+api.post('/conjugaison', auth.requireUser, limit, async (req, res, next) => {
   try { res.json(await forms.conjugateEntries((req.body || {}).verbes)); } catch (e) { next(e); }
 });
-api.post('/phrases', profile, limit, async (req, res, next) => {
+api.post('/phrases', auth.requireUser, limit, async (req, res, next) => {
   try { res.json(await forms.phrases((req.body || {}).mots)); } catch (e) { next(e); }
 });
-
-api.post('/aventure', profile, limit, async (req, res, next) => {
+api.post('/aventure', auth.requireUser, limit, async (req, res, next) => {
   try { const b = req.body || {}; res.json(await forms.adventure(b.mots, b.anciens, b.chapitres, b.theme)); } catch (e) { next(e); }
 });
 
 // Voix : limite a part (le son est mis en cache, l'essentiel des appels ne coute rien).
 let ttsWindow = { start: 0, n: 0 };
-api.get('/tts', profile, async (req, res, next) => {
+api.get('/tts', auth.requireUser, async (req, res, next) => {
   try {
     const now = Date.now();
     if (now - ttsWindow.start > 60000) ttsWindow = { start: now, n: 0 };
-    const file = await tts.audioFor(req.query.text, req.query.slow === '1', () => ++ttsWindow.n > 40);
+    const file = await tts.audioFor(req.query.text, req.query.slow === '1', () => ++ttsWindow.n > 40, req.user.voice);
     res.set('Cache-Control', 'private, max-age=86400').type('audio/wav').sendFile(file);
   } catch (e) { next(e); }
 });
