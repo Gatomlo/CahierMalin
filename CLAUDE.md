@@ -22,6 +22,7 @@ Node ≥ 22.5 (`node:sqlite`), Express 4, front en **un seul fichier** `public/i
 - PWA : `manifest.json`, `sw.js` (réseau d'abord, jamais l'API), icônes PNG générées. Sons de réussite en Web Audio (réglage « Sons » sur l'accueil).
 
 ## Commandes
+- `npm run set-password -- <identifiant> <mot de passe>` : réinitialise un compte parent (ferme ses sessions).
 - `npm test` (API + faux Gemini, données temporaires) · `npm start` (port 3000) · `CAHIER_DATA_DIR=<dossier> PORT=3111 node server.js` pour un essai.
 - Passerelle : jonction `node-gateway/apps/cahier-malin` → ce dossier, servi sur `/cahier-malin/`.
 - Déploiement (Infomaniak) : envoyer `server.js`, `lib/`, `public/`, `package.json`, `package-lock.json`, **jamais `data/`**, puis `npm install --omit=dev` et redémarrage. Clé Gemini : variable d'environnement ou `data/gemini.key` sur le serveur.

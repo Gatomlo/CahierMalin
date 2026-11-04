@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "set-password": "node scripts/set-password.js"
   },
   "engines": {
     "node": ">=22.5.0"
