@@ -27,7 +27,8 @@ Node ≥ 22.5 (`node:sqlite`), Express 4, front en **un seul fichier** `public/i
 - `npm run set-password -- <identifiant> <mot de passe>` : réinitialise un compte parent (ferme ses sessions).
 - `npm test` (API + faux Gemini, données temporaires) · `npm start` (port 3000) · `CAHIER_DATA_DIR=<dossier> PORT=3111 node server.js` pour un essai.
 - Passerelle : jonction `node-gateway/apps/cahier-malin` → ce dossier, servi sur `/cahier-malin/`.
-- Déploiement (Infomaniak) : envoyer `server.js`, `lib/`, `public/`, `package.json`, `package-lock.json`, **jamais `data/`**, puis `npm install --omit=dev` et redémarrage. Clé Gemini : saisie par l'administrateur dans l'espace parent.
+- Installation / mise à jour sur le serveur (SSH, depuis le dossier de la passerelle) : `curl -fsSL https://raw.githubusercontent.com/Gatomlo/CahierMalin/main/scripts/install.sh | bash` (`scripts/install.sh` : clone ou `git pull --ff-only`, reprend un dossier envoyé à la main, refuse si fichiers modifiés, vérifie Node ≥ 22.5, `npm install --omit=dev`, ne touche jamais `data/`), puis redémarrer le site.
+- Déploiement manuel (Infomaniak, sans git) : envoyer `server.js`, `lib/`, `public/`, `package.json`, `package-lock.json`, **jamais `data/`**, puis `npm install --omit=dev` et redémarrage. Clé Gemini : saisie par l'administrateur dans l'espace parent.
 
 ## Déploiement des comptes
 Au premier lancement après mise à jour la migration s'applique seule ; ouvrir l'appli, créer le compte parent (il récupère les profils existants). Sans HTTPS, le cookie n'est pas `Secure` (il l'est derrière un proxy qui envoie `X-Forwarded-Proto: https`).
