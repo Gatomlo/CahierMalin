@@ -37,3 +37,5 @@ Au premier lancement après mise à jour la migration s'applique seule ; ouvrir 
 
 ## Méthode
 Tester par API/`npm test` avant toute capture. Le panneau « Décliner » est dans l'éditeur de liste (limite 12 mots par demande, 20 appels/min côté serveur).
+
+- Sécurité (branche `claude/security-fixes`) : derrière la passerelle, la création du premier compte exige le droit admin de la passerelle (plus de course au premier visiteur ; hors passerelle : inchangé, test `gateway-setup`) ; dépendances à jour (`npm audit` : 0).
