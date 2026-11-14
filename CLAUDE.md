@@ -30,6 +30,8 @@ Node ≥ 22.5 (`node:sqlite`), Express 4, front en **un seul fichier** `public/i
 - Installation / mise à jour sur le serveur (SSH, depuis le dossier de la passerelle) : `curl -fsSL https://raw.githubusercontent.com/Gatomlo/CahierMalin/main/scripts/install.sh | bash` (`scripts/install.sh` : clone ou `git pull --ff-only`, reprend un dossier envoyé à la main, refuse si fichiers modifiés, vérifie Node ≥ 22.5, `npm install --omit=dev`, ne touche jamais `data/`), puis redémarrer le site.
 - Déploiement manuel (Infomaniak, sans git) : envoyer `server.js`, `lib/`, `public/`, `package.json`, `package-lock.json`, **jamais `data/`**, puis `npm install --omit=dev` et redémarrage. Clé Gemini : saisie par l'administrateur dans l'espace parent.
 
+- Connexion centralisée (node-gateway) : `lib/gateway-bridge.js` (copie de `node-gateway/docs/gateway-bridge.js`) + `loadUser` dans `lib/auth.js`. Si la passerelle fournit `req.gateway` (droit sur cet outil), l'identité est rattachée au compte local **de même identifiant** (aucun compte créé) et ouvre une session locale de 2 h, renouvelée en silence ; l'espace parent reste verrouillé (mot de passe à retaper). Hors passerelle : sans effet. Test : `tests/gateway-bridge.test.js`.
+
 ## Déploiement des comptes
 Au premier lancement après mise à jour la migration s'applique seule ; ouvrir l'appli, créer le compte parent (il récupère les profils existants). Sans HTTPS, le cookie n'est pas `Secure` (il l'est derrière un proxy qui envoie `X-Forwarded-Proto: https`).
 
