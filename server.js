@@ -142,4 +142,7 @@ if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => console.log(`Le Cahier Malin : http://localhost:${PORT}/`));
 }
+// Liste des comptes pour l'administration de node-gateway (lecture seule, facultatif : voir node-gateway/README).
+app.gatewayAccounts = () => acc.listUsers().map((u) => ({ key: u.username, login: u.username, name: u.username, detail: u.isAdmin ? 'administrateur' : 'parent' }));
+
 module.exports = app;
