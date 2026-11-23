@@ -1,8 +1,8 @@
 // Service worker : permet d'installer l'appli et d'ouvrir la page sans reseau.
 // Reseau d'abord (toujours la derniere version), copie locale en secours.
 // L'API (/api/...) n'est jamais mise en cache.
-const CACHE = 'cahier-malin-v1';
-const SHELL = ['./', 'manifest.json', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'cahier-malin-v2';
+const SHELL = ['./', 'style.css', 'js/core.js', 'js/games.js', 'js/editor.js', 'js/app.js', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
