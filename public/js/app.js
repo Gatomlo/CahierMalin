@@ -19,8 +19,9 @@ $('#btnNewList').addEventListener('click', function(){ openEditor(null); });
 $('#btnMistakesGlobal').addEventListener('click', function(){ renderMistakesBook(); goto('mistakesBook'); });
 $('#btnResultsAgain').addEventListener('click', function(){ startMode(nav.mode, nav.kind); });
 $('#btnResultsDone').addEventListener('click', function(){ openDashboard(nav.listId); });
-$('#segLearn').addEventListener('click', function(){ nav.reviewAll = false; renderDashboard(); });
-$('#segAll').addEventListener('click', function(){ nav.reviewAll = true; renderDashboard(); });
+$('#segLearn').addEventListener('click', function(){ nav.reviewAll = false; nav.dueOnly = false; renderDashboard(); });
+$('#segAll').addEventListener('click', function(){ nav.reviewAll = true; nav.dueOnly = false; renderDashboard(); });
+$('#segDue').addEventListener('click', function(){ nav.reviewAll = false; nav.dueOnly = true; renderDashboard(); });
 
 
 /* ---------------- connexion, profils ---------------- */
@@ -420,6 +421,12 @@ function renderSuivi(p){
     if(!box) return;
     box.innerHTML = '';
     var card = pcard('Suivi de ' + p.name);
+    // Alerte : dictee dans 7 jours ou moins alors que moins de la moitie des mots est acquise
+    (d.listes || []).filter(function(l){ var n = daysUntil(l.due); return n !== null && n <= 7 && l.mots && l.acquis * 2 < l.mots; })
+      .sort(function(a, b){ return a.due < b.due ? -1 : 1; }).forEach(function(l){
+        var n = daysUntil(l.due), left = l.mots - l.acquis;
+        card.appendChild(el('div',{class:'alert-card', role:'alert'}, '<strong>Dictée ' + (n === 0 ? 'aujourd’hui' : (n === 1 ? 'demain' : 'dans ' + n + ' jours')) + '</strong> « ' + escapeHtml(l.name) + ' » : seulement ' + l.acquis + ' mot' + (l.acquis>1?'s':'') + ' acquis sur ' + l.mots + ' (' + left + ' à travailler). Une courte séance chaque jour suffit encore.'));
+      });
     if(!d.total.n){
       card.appendChild(el('p',{class:'wg-empty'}, 'Aucun exercice enregistré pour le moment.'));
       box.appendChild(card); 

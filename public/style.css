@@ -271,6 +271,8 @@
   .p-tab:hover{ color:var(--ink); }
   .p-pane > .p-card{ margin-bottom:14px; }
   .p-sub{ font-family:'Baloo 2'; margin:12px 0 4px; font-size:1rem; }
+  .alert-card{ background:color-mix(in srgb, var(--red) 12%, var(--surface)); border:1.5px solid var(--red); border-radius:12px; padding:10px 14px; margin:6px 0 10px; line-height:1.45; }
+  .alert-card strong{ display:block; }
   .stat-tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin:10px 0 14px; }
   .stat-tiles .tile{ background:var(--surface); border:1.5px solid var(--paper-edge); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
   .stat-tiles .tile b{ font-family:'Baloo 2'; font-size:1.5rem; line-height:1.1; color:var(--ink); }

@@ -321,3 +321,17 @@ test('regle de grammaire : facultative, relue telle quelle, invalide refusee, ab
   assert.equal((await put([{ ...sans, rule: 'texte' }])).status, 400);
   assert.equal((await call('/api/regle', { method: 'POST', body: JSON.stringify({ nom: 'x' }) })).status, 400); // sans cle Gemini
 });
+
+test('partage de liste : code, import sans progression, code inconnu, liste invalide', async () => {
+  const list = { id: 'x', name: 'Partagee', words: [{ w: 'chat', s: 'Le chat dort.' }, { w: 'je chante', g: 'chanter (présent)' }], rule: { nom: 'Pluriel', memo: 'On ajoute s.' }, due: '2030-01-01', pending: ['finir (futur)'] };
+  const post = (l) => call('/api/share', { method: 'POST', body: JSON.stringify({ list: l }) });
+  const r = await post(list);
+  assert.equal(r.status, 200);
+  const { code } = await r.json();
+  assert.match(code, /^[A-Z2-9]{6}$/);
+  const got = await (await call('/api/share/' + code.toLowerCase())).json();
+  assert.deepEqual(got.list, { name: 'Partagee', words: [{ w: 'chat', s: 'Le chat dort.' }, { w: 'je chante', g: 'chanter (présent)' }], rule: list.rule });
+  assert.equal((await call('/api/share/ZZZZZZ')).status, 404);
+  assert.equal((await post({ ...list, words: [] })).status, 400);
+  assert.equal((await post({ name: 5 })).status, 400);
+});

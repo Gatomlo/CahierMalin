@@ -45,6 +45,7 @@
         <svg viewBox="0 0 20 20" fill="none"><path d="M4 4h9l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M7 9h6M7 12h6M7 15h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         Carnet d'erreurs
       </button>
+      <button class="btn btn-ghost" id="btnImportCode" type="button">Importer avec un code</button>
     </div>
     <div class="settings">
       <div class="settings-top">
@@ -85,6 +86,7 @@
     <div class="seg" role="group" aria-label="Type d'entraînement">
       <button type="button" class="seg-btn" id="segLearn" aria-pressed="true">À apprendre</button>
       <button type="button" class="seg-btn" id="segAll" aria-pressed="false">Tout revoir</button>
+      <button type="button" class="seg-btn" id="segDue" aria-pressed="false" hidden>À revoir aujourd’hui</button>
     </div>
     <p class="unlock-hint" id="dashModeHint"></p>
     <div class="modes" id="modesContainer"></div>
@@ -327,6 +329,7 @@
       </div>
       <div class="row-actions" style="justify-content:flex-start;">
         <button type="submit" class="btn btn-primary">Enregistrer la liste</button>
+        <button type="button" class="btn btn-ghost" id="btnShareList" style="display:none;">Partager cette liste</button>
         <button type="button" class="btn btn-danger" id="btnDeleteList" style="display:none;">Supprimer cette liste</button>
       </div>
     </form>

@@ -128,6 +128,30 @@ api.post('/aventure', auth.requireUser, limit, async (req, res, next) => {
   try { const b = req.body || {}; res.json(await forms.adventure(b.mots, b.anciens, b.chapitres, b.theme)); } catch (e) { next(e); }
 });
 
+// Partage d'une liste entre familles : un code court (30 jours) donne la liste (mots, phrases, regle), jamais la progression.
+const SHARE_DAYS = 30, CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const newCode = () => Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+api.post('/share', auth.requireUser, limit, (req, res) => {
+  const l = (req.body || {}).list;
+  const err = checkState({ lists: [l] });
+  if (err) return res.status(400).json({ error: err });
+  if (!l.words.length) return res.status(400).json({ error: 'Liste vide.' });
+  const payload = { name: l.name, words: l.words.map((w) => { const o = { w: w.w }; if (w.s) o.s = w.s; if (w.g) o.g = w.g; return o; }) };
+  if (l.rule) payload.rule = l.rule;
+  const now = Date.now();
+  db.db.prepare('DELETE FROM shares WHERE created_at < ?').run(now - SHARE_DAYS * 86400000);
+  let code;
+  do { code = newCode(); } while (db.db.prepare('SELECT 1 FROM shares WHERE code = ?').get(code));
+  db.db.prepare('INSERT INTO shares (code, payload, created_at) VALUES (?, ?, ?)').run(code, JSON.stringify(payload), now);
+  res.json({ code, days: SHARE_DAYS });
+});
+api.get('/share/:code', auth.requireUser, limit, (req, res) => {
+  const code = String(req.params.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const row = db.db.prepare('SELECT payload, created_at FROM shares WHERE code = ?').get(code);
+  if (!row || row.created_at < Date.now() - SHARE_DAYS * 86400000) return res.status(404).json({ error: 'Code inconnu ou expiré.' });
+  res.json({ list: JSON.parse(row.payload) });
+});
+
 // Voix : limite a part (le son est mis en cache, l'essentiel des appels ne coute rien).
 let ttsWindow = { start: 0, n: 0 };
 api.get('/tts', auth.requireUser, async (req, res, next) => {

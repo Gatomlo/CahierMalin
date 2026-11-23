@@ -145,7 +145,7 @@ function syncFromServer(){
 }
 
 var state = loadState();
-var nav = { screen:'home', listId:null, mode:null, kind:'learn', reviewAll:false, round:[], idx:0, results:[], stage:'look', startGradeIdx:0 };
+var nav = { screen:'home', listId:null, mode:null, kind:'learn', reviewAll:false, dueOnly:false, round:[], idx:0, results:[], stage:'look', startGradeIdx:0 };
 
 /* ---------------- grades & progression ---------------- */
 /* Chaque liste a son propre score en % et son propre grade : 100 % seulement
@@ -259,6 +259,20 @@ function canPlay(mode, w){
   return n >= 3 && n <= 12;
 }
 function roundSizeFor(mode){ if(mode === 'aventure') return 8; if(mode === 'race') return 60; return (mode === 'memory' || mode === 'wordsearch' || mode === 'safe') ? 6 : ROUND_SIZE; }
+/* Revision espacee : un mot rate revient a J+1, puis J+3, J+7, J+14, J+30 s'il est reussi aux dates prevues. */
+var SPACING = [1, 3, 7, 14, 30];
+function addDays(n){ return dayStr(new Date(Date.now() + n * 86400000)); }
+function scheduleWord(p, correct){
+  var today = dayStr(new Date());
+  if(!correct){ p.box = 0; p.next = addDays(SPACING[0]); return; }
+  if(p.next === undefined || p.next > today) return;   // jamais rate, ou pas encore l'heure : rien a avancer
+  p.box = Math.min((p.box || 0) + 1, SPACING.length - 1);
+  p.next = addDays(SPACING[p.box]);
+}
+function dueWords(list){
+  var today = dayStr(new Date());
+  return list.words.filter(function(w){ var p = peekProgress(list.id, w.w); return p && ((p.next && p.next <= today) || (p.lastWrong && !p.next)); });
+}
 function eligibleWords(list, mode){
   return list.words.filter(function(w){
     if(!canPlay(mode, w)) return false;
@@ -515,6 +529,8 @@ function renderHome(){
       var rest = total - mastered;
       info.appendChild(el('div',{class:'meta countdown'}, escapeHtml('Dictée ' + (dleft === 0 ? "aujourd'hui" : (dleft === 1 ? 'demain' : 'dans ' + dleft + ' jours')) + ' · ' + rest + ' mot' + (rest > 1 ? 's' : '') + ' à revoir')));
     }
+    var dn0 = dueWords(list).length;
+    if(dn0) info.appendChild(el('div',{class:'meta countdown'}, escapeHtml(dn0 + ' mot' + (dn0>1?'s':'') + ' à revoir aujourd’hui')));
     if(list.pending && list.pending.length){
       var pend = el('div',{class:'meta', style:'color:var(--red)'}, escapeHtml(list.pending.length+' déclinaison'+(list.pending.length>1?'s':'')+' en attente de l’IA '));
       var retry = el('button',{type:'button', class:'btn btn-secondary'}, 'Relancer');
@@ -554,11 +570,18 @@ function renderDashboard(){
   $('#dashScorePct').textContent = sc.pct + ' %';
   $('#dashScoreBar').style.width = sc.pct + '%';
   $('#dashScoreDetail').textContent = acquiredN + ' mot' + (acquiredN>1?'s':'') + ' acquis sur ' + list.words.length + '. Un mot est acquis quand il est réussi dans ' + X + ' exercice' + (X>1?'s':'') + ' différent' + (X>1?'s':'') + '.';
-  $('#segLearn').setAttribute('aria-pressed', nav.reviewAll ? 'false' : 'true');
+  var dueN = dueWords(list).length;
+  if(!dueN) nav.dueOnly = false;
+  $('#segDue').hidden = !dueN;
+  $('#segDue').textContent = 'À revoir aujourd’hui (' + dueN + ')';
+  $('#segLearn').setAttribute('aria-pressed', (nav.reviewAll || nav.dueOnly) ? 'false' : 'true');
   $('#segAll').setAttribute('aria-pressed', nav.reviewAll ? 'true' : 'false');
-  $('#dashModeHint').textContent = nav.reviewAll
-    ? 'Tous les mots sont proposés, même ceux déjà acquis. Ta progression ne change pas.'
-    : 'Seuls les mots pas encore réussis dans chaque exercice sont proposés.';
+  $('#segDue').setAttribute('aria-pressed', nav.dueOnly ? 'true' : 'false');
+  $('#dashModeHint').textContent = nav.dueOnly
+    ? 'Les mots ratés reviennent au bout de 1, 3, 7, 14 puis 30 jours : c’est comme ça qu’on les retient pour de bon.'
+    : (nav.reviewAll
+      ? 'Tous les mots sont proposés, même ceux déjà acquis. Ta progression ne change pas.'
+      : 'Seuls les mots pas encore réussis dans chaque exercice sont proposés.');
   var rc = $('#ruleCard');
   if(list.rule){ rc.hidden = false; rc.innerHTML = '<strong>À retenir : ' + escapeHtml(list.rule.nom) + '</strong>' + (list.rule.memo ? escapeHtml(list.rule.memo) : ''); }
   else { rc.hidden = true; rc.innerHTML = ''; }
@@ -572,7 +595,11 @@ function renderModesGrid(listId){
   box.innerHTML = '';
   MODE_DEFS.forEach(function(def){
     var disabled, meta;
-    if(nav.reviewAll){
+    if(nav.dueOnly){
+      var dn = dueWords(list).filter(function(w){ return canPlay(def.id, w); }).length;
+      disabled = dn === 0;
+      meta = dn ? (dn + ' mot' + (dn>1?'s':'') + ' à revoir') : 'Rien à revoir ici';
+    } else if(nav.reviewAll){
       var playN = list.words.filter(function(w){ return canPlay(def.id, w); }).length;
       disabled = playN === 0;
       meta = playN ? ('Tous les mots (' + playN + ')') : (def.id === 'cloze' ? "Ajoute des phrases d'exemple" : 'Mots trop longs pour la grille');
@@ -586,7 +613,7 @@ function renderModesGrid(listId){
     if(disabled) card.setAttribute('disabled','true');
     card.innerHTML = '<div class="ic">'+def.icon+'</div><h4>'+escapeHtml(def.title)+'</h4><p>'+escapeHtml(def.desc)+'</p><span class="mode-meta">'+escapeHtml(meta)+'</span>';
     if(!disabled){
-      card.addEventListener('click', function(){ startMode(def.id, nav.reviewAll ? 'review' : 'learn'); });
+      card.addEventListener('click', function(){ startMode(def.id, (nav.reviewAll && !nav.dueOnly) ? 'review' : 'learn'); });
     }
     box.appendChild(card);
   });
@@ -629,6 +656,9 @@ function pickRound(listId, mode, kind){
   var list = getList(listId);
   if(kind === 'review'){
     return shuffle(list.words.filter(function(w){ return canPlay(mode, w); })).slice(0, roundSizeFor(mode));
+  }
+  if(nav.dueOnly){
+    return shuffle(dueWords(list).filter(function(w){ return canPlay(mode, w); })).slice(0, roundSizeFor(mode));
   }
   var words = eligibleWords(list, mode);
   var order = {practice:0, new:1, progress:1, mastered:2};
@@ -718,6 +748,7 @@ function recordAttempt(word, correct){
     p.attempts++;
     if(correct){ p.lastWrong = false; p.modes[nav.mode] = true; }
     else { p.lastWrong = true; p.wrongCount = (p.wrongCount||0)+1; }
+    scheduleWord(p, correct);
   }
   if(correct){ state.stars++; }
   playSound(correct ? 'ok' : 'no');

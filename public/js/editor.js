@@ -78,6 +78,7 @@ function openEditor(listId){
     $('#listRuleMemo').value = list.rule && list.rule.memo || '';
     $('#listWords').value = listToText(list);
     $('#btnDeleteList').style.display = 'inline-flex';
+    $('#btnShareList').style.display = 'inline-flex';
   } else {
     $('#editorEyebrow').textContent = 'Nouvelle liste';
     $('#listName').value = '';
@@ -86,6 +87,7 @@ function openEditor(listId){
     $('#listRuleMemo').value = '';
     $('#listWords').value = '';
     $('#btnDeleteList').style.display = 'none';
+    $('#btnShareList').style.display = 'none';
   }
   syncRuleFields(); updateWordCountHint();
   goto('editor');
@@ -171,6 +173,26 @@ $('#editorForm').addEventListener('submit', function(ev){
     renderHome();
     goto('home');
   }).catch(function(e){ toast(e.message); }).then(function(){ submit.removeAttribute('disabled'); });
+});
+/* Partage entre familles : un code court donne la liste (mots, phrases, regle), pas la progression. */
+$('#btnShareList').addEventListener('click', function(){
+  var list = getList(editingListId);
+  if(!list) return;
+  var btn = $('#btnShareList'); btn.setAttribute('disabled','true');
+  apiFetch('api/share', { method:'POST', body: JSON.stringify({ list: list }) }).then(function(r){
+    window.prompt('Code de partage (valable ' + r.days + ' jours). Donne-le à l’autre famille, qui choisit « Importer avec un code » :', r.code);
+  }).catch(function(e){ toast(e.message); }).then(function(){ btn.removeAttribute('disabled'); });
+});
+$('#btnImportCode').addEventListener('click', function(){
+  var code = (window.prompt('Code de partage de la liste :') || '').trim();
+  if(!code) return;
+  apiFetch('api/share/' + encodeURIComponent(code)).then(function(r){
+    var l = r.list;
+    state.lists.push({ id: 'list_' + Date.now(), name: l.name, words: l.words, rule: l.rule });
+    if(!l.rule) delete state.lists[state.lists.length - 1].rule;
+    saveState(); renderHome();
+    toast('Liste « ' + l.name + ' » ajoutée (' + l.words.length + ' mots).');
+  }).catch(function(e){ toast(e.message); });
 });
 $('#btnDeleteList').addEventListener('click', function(){
   if(!editingListId) return;
