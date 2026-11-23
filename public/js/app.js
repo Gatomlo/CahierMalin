@@ -77,9 +77,9 @@ function applyPrefs(){
   document.body.classList.toggle('focus-mode', focus);
   document.body.classList.toggle('dys', dys);
   SCALES.forEach(function(s){ if(s[1]) document.body.classList.toggle(s[1], SCALES[sc] === s); });
-  $('#btnFocus').textContent = 'Concentration : ' + (focus ? 'oui' : 'non'); $('#btnFocus').setAttribute('aria-pressed', focus);
-  $('#btnDys').textContent = 'Police lisible : ' + (dys ? 'oui' : 'non'); $('#btnDys').setAttribute('aria-pressed', dys);
-  $('#btnScale').textContent = 'Texte : ' + SCALES[sc][0];
+  $('#btnFocus').setAttribute('aria-pressed', focus);
+  $('#btnDys').setAttribute('aria-pressed', dys);
+  $('#scaleVal').textContent = SCALES[sc][0].charAt(0).toUpperCase() + SCALES[sc][0].slice(1);
 }
 $('#btnFocus').addEventListener('click', function(){ setPref('focus', getPref('focus','0') === '1' ? '0' : '1'); applyPrefs(); });
 $('#btnDys').addEventListener('click', function(){ setPref('dys', getPref('dys','0') === '1' ? '0' : '1'); applyPrefs(); });

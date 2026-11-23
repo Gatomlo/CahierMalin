@@ -47,13 +47,20 @@
       </button>
     </div>
     <div class="settings">
-      <span>Profil :</span><strong id="profileName"></strong>
-      <button type="button" class="btn btn-ghost" id="btnProfile" style="padding:5px 12px;font-size:.82rem;">Changer</button>
-      <button type="button" class="btn btn-ghost" id="btnSounds" style="padding:5px 12px;font-size:.82rem;" aria-pressed="true">Sons : oui</button>
-      <button type="button" class="btn btn-ghost" id="btnFocus" style="padding:5px 12px;font-size:.82rem;" aria-pressed="false">Concentration : non</button>
-      <button type="button" class="btn btn-ghost" id="btnDys" style="padding:5px 12px;font-size:.82rem;" aria-pressed="false">Police lisible : non</button>
-      <button type="button" class="btn btn-ghost" id="btnScale" style="padding:5px 12px;font-size:.82rem;">Texte : normal</button>
-      <button type="button" class="btn btn-ghost" id="btnParent" style="padding:5px 12px;font-size:.82rem;">Espace parent</button>
+      <div class="settings-top">
+        <span class="who">Profil <strong id="profileName"></strong></span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnProfile">Changer</button>
+        <button type="button" class="btn btn-ghost btn-sm push" id="btnParent">Espace parent</button>
+      </div>
+      <details class="prefs">
+        <summary>Réglages d’affichage et de confort</summary>
+        <div class="prefs-grid">
+          <button type="button" class="pref" id="btnSounds" aria-pressed="true"><span>Sons</span><i class="sw" aria-hidden="true"></i></button>
+          <button type="button" class="pref" id="btnFocus" aria-pressed="false"><span>Concentration</span><i class="sw" aria-hidden="true"></i></button>
+          <button type="button" class="pref" id="btnDys" aria-pressed="false"><span>Police lisible</span><i class="sw" aria-hidden="true"></i></button>
+          <button type="button" class="pref" id="btnScale"><span>Taille du texte</span><b id="scaleVal">Normal</b></button>
+        </div>
+      </details>
     </div>
   </section>
 

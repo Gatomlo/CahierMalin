@@ -688,7 +688,6 @@ function playSound(kind){
 }
 function updateSoundsBtn(){
   var b = $('#btnSounds');
-  b.textContent = 'Sons : ' + (soundsOn ? 'oui' : 'non');
   b.setAttribute('aria-pressed', soundsOn ? 'true' : 'false');
 }
 
