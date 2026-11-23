@@ -265,6 +265,16 @@
   .pip.on{ background:var(--green); border-color:var(--green); }
 
   .page .settings{ flex-direction:column; align-items:stretch; }
+  .p-tabs{ display:flex; gap:4px; border-bottom:2px solid var(--paper-edge); margin-bottom:14px; flex-wrap:wrap; }
+  .p-tab{ font-family:'Baloo 2'; font-weight:600; font-size:.95rem; padding:9px 16px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; white-space:nowrap; }
+  .p-tab[aria-selected="true"]{ color:var(--ink); border-bottom-color:var(--gold); }
+  .p-tab:hover{ color:var(--ink); }
+  .p-pane > .p-card{ margin-bottom:14px; }
+  .p-sub{ font-family:'Baloo 2'; margin:12px 0 4px; font-size:1rem; }
+  .stat-tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin:10px 0 14px; }
+  .stat-tiles .tile{ background:var(--surface); border:1.5px solid var(--paper-edge); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
+  .stat-tiles .tile b{ font-family:'Baloo 2'; font-size:1.5rem; line-height:1.1; color:var(--ink); }
+  .stat-tiles .tile span{ font-size:.78rem; color:var(--ink-soft); }
   .settings-top{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .settings-top .who{ color:var(--ink-soft); }
   .settings-top .push{ margin-left:auto; }

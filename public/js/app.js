@@ -124,22 +124,67 @@ function pbtn(label, cls, fn){
   b.addEventListener('click', fn);
   return b;
 }
+/* Espace parent : une page par rubrique (onglets) au lieu d'une longue page. */
+var parentTab = 'suivi', parentChild = null;
+var PTABS = [['suivi','Suivi'],['enfants','Enfants'],['listes','Listes'],['reglages','Réglages']];
 function renderParent(){
   goto('parent');
   var box = $('#parentBox');
   box.innerHTML = '<p class="wg-empty">Chargement…</p>';
   Promise.all([apiFetch('api/parent/profiles'), apiFetch('api/me')]).then(function(res){
     var profiles = res[0].profiles; me = res[1];
-    box.innerHTML = '';
-    box.appendChild(parentProfiles(profiles));
-    box.appendChild(el('div',{id:'suiviBox'}));
-    if(profiles.some(function(p){ return p.lists.length; }) && profiles.length > 1) box.appendChild(parentCopy(profiles));
-    box.appendChild(parentVoice());
-    box.appendChild(parentAccount());
-    if(me.user.isAdmin){ box.appendChild(parentServer()); box.appendChild(parentUsers()); }
+    var tabs = PTABS.concat(me.user.isAdmin ? [['admin','Administration']] : []);
+    function paint(){
+      if(!tabs.some(function(t){ return t[0] === parentTab; })) parentTab = 'suivi';
+      if(!profiles.some(function(p){ return p.id === parentChild; })) parentChild = profiles.length ? profiles[0].id : null;
+      box.innerHTML = '';
+      var bar = el('div',{class:'p-tabs', role:'tablist'});
+      tabs.forEach(function(t){
+        var on = t[0] === parentTab;
+        var btn = el('button',{type:'button', role:'tab', class:'p-tab', 'aria-selected': on ? 'true' : 'false'}, escapeHtml(t[1]));
+        btn.addEventListener('click', function(){ parentTab = t[0]; paint(); });
+        bar.appendChild(btn);
+      });
+      box.appendChild(bar);
+      var pane = el('div',{class:'p-pane', role:'tabpanel'});
+      box.appendChild(pane);
+      if(parentTab === 'suivi') parentSuiviTab(pane, profiles, paint);
+      else if(parentTab === 'enfants') pane.appendChild(parentProfiles(profiles, function(p){ parentChild = p.id; parentTab = 'suivi'; paint(); }));
+      else if(parentTab === 'listes') parentListsTab(pane, profiles);
+      else if(parentTab === 'reglages'){ pane.appendChild(parentVoice()); pane.appendChild(parentAccount()); }
+      else if(parentTab === 'admin'){ pane.appendChild(parentServer()); pane.appendChild(parentUsers()); }
+    }
+    paint();
   }).catch(parentErr);
 }
-function parentProfiles(profiles){
+function parentSuiviTab(pane, profiles, paint){
+  if(!profiles.length){ pane.appendChild(el('p',{class:'wg-empty'}, 'Aucun profil : ajoute un enfant dans l’onglet « Enfants ».')); return; }
+  if(profiles.length > 1){
+    var seg = el('div',{class:'seg', role:'group', 'aria-label':'Enfant'});
+    profiles.forEach(function(p){
+      var b = el('button',{type:'button', class:'seg-btn', 'aria-pressed': p.id === parentChild ? 'true' : 'false'}, escapeHtml(p.name));
+      b.addEventListener('click', function(){ parentChild = p.id; paint(); });
+      seg.appendChild(b);
+    });
+    pane.appendChild(seg);
+  }
+  pane.appendChild(el('div',{id:'suiviBox', style:'margin-top:12px;'}));
+  renderSuivi(profiles.filter(function(p){ return p.id === parentChild; })[0]);
+}
+function parentListsTab(pane, profiles){
+  var card = pcard('Listes de chaque enfant');
+  profiles.forEach(function(p){
+    card.appendChild(el('h4',{class:'p-sub'}, escapeHtml(p.name)));
+    if(!p.lists.length) card.appendChild(el('p',{class:'wg-empty'}, 'Aucune liste.'));
+    p.lists.forEach(function(l){
+      card.appendChild(el('div',{class:'mini-row'}, '<span class="nm">' + escapeHtml(l.name) + '</span><span class="val">' + l.mots + ' mot' + (l.mots>1?'s':'') + '</span>'));
+    });
+  });
+  pane.appendChild(card);
+  if(profiles.length > 1 && profiles.some(function(p){ return p.lists.length; })) pane.appendChild(parentCopy(profiles));
+  else pane.appendChild(el('p',{class:'wg-empty'}, 'Avec deux profils ou plus, tu pourras copier une liste de l’un à l’autre.'));
+}
+function parentProfiles(profiles, openSuivi){
   var card = pcard('Profils des enfants');
   profiles.forEach(function(p){
     var row = el('div',{class:'p-profile'});
@@ -158,7 +203,7 @@ function parentProfiles(profiles){
     row.appendChild(line2);
     row.appendChild(el('div',{class:'p-row'}, '<span style="color:var(--ink-soft)">' + p.lists.length + ' liste' + (p.lists.length>1?'s':'') + '</span>'));
     var line3 = el('div',{class:'p-row'});
-    line3.appendChild(pbtn('Suivi', 'btn-primary', function(){ renderSuivi(p); }));
+    line3.appendChild(pbtn('Voir le suivi', 'btn-primary', function(){ openSuivi(p); }));
     line3.appendChild(pbtn('Exporter', 'btn-ghost', function(){ downloadExport(p); }));
     var file = el('input',{type:'file', accept:'application/json,.json', hidden:'true'});
     file.addEventListener('change', function(){ importFile(p, file.files[0]); });
@@ -372,11 +417,12 @@ function pct(ok, n){ return n ? Math.round(ok / n * 100) : 0; }
 function renderSuivi(p){
   apiFetch('api/parent/profiles/' + p.id + '/suivi').then(function(d){
     var box = $('#suiviBox');
+    if(!box) return;
     box.innerHTML = '';
     var card = pcard('Suivi de ' + p.name);
     if(!d.total.n){
       card.appendChild(el('p',{class:'wg-empty'}, 'Aucun exercice enregistré pour le moment.'));
-      box.appendChild(card); box.scrollIntoView({ behavior:'smooth' });
+      box.appendChild(card); 
       return;
     }
     var wk = d.semaine || { n:0, ok:0, jours:0 };
@@ -386,6 +432,11 @@ function renderSuivi(p){
     sum.innerHTML = '<strong>Cette semaine</strong> : ' + wk.jours + ' jour' + (wk.jours>1?'s':'') + ' d’entraînement sur 7, ' + wk.n + ' réponse' + (wk.n>1?'s':'') + (wk.n ? ', ' + pct(wk.ok, wk.n) + ' % de réussite' : '') + '.'
       + (due ? ' Prochaine dictée (« ' + escapeHtml(due.name) + ' ») ' + (dd === 0 ? 'aujourd’hui' : 'dans ' + dd + ' jour' + (dd>1?'s':'')) + ' : ' + left + ' mot' + (left>1?'s':'') + ' pas encore acquis' + (d.mots.length ? ', dont ' + d.mots.slice(0, 5).map(function(m){ return escapeHtml(m.word); }).join(', ') + ' souvent ratés' : '') + '.' : '');
     card.appendChild(sum);
+    card.appendChild(el('div',{class:'stat-tiles'},
+      '<div class="tile"><b>' + pct(d.total.ok, d.total.n) + ' %</b><span>réussite sur 90 jours</span></div>'
+      + '<div class="tile"><b>' + d.total.n + '</b><span>réponses sur 90 jours</span></div>'
+      + '<div class="tile"><b>' + wk.jours + ' / 7</b><span>jours cette semaine</span></div>'
+      + '<div class="tile"><b>' + (wk.n ? pct(wk.ok, wk.n) + ' %' : '–') + '</b><span>réussite cette semaine</span></div>'));
     var last = d.total.last ? new Date(d.total.last).toLocaleDateString('fr-FR', { day:'numeric', month:'long' }) : '';
     card.appendChild(el('p',{class:'wg-empty'}, d.total.n + ' réponses sur 90 jours, ' + pct(d.total.ok, d.total.n) + ' % de réussite. Dernière séance : ' + escapeHtml(last) + '.'));
     var max = Math.max.apply(null, d.days.map(function(x){ return x.n; })) || 1;
@@ -426,7 +477,7 @@ function renderSuivi(p){
       card.appendChild(row);
     });
     box.appendChild(card);
-    box.scrollIntoView({ behavior:'smooth' });
+    
   }).catch(parentErr);
 }
 
