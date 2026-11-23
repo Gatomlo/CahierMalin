@@ -568,3 +568,6 @@
 .sync-badge.ok{ color:var(--green); }
 .sync-badge.pending{ color:var(--ink-soft); }
 .sync-badge.offline{ color:var(--red); }
+
+/* ---------- choix des mots a decliner ---------- */
+.decl-pick-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:4px 10px; max-height:220px; overflow:auto; margin:6px 0 10px; }

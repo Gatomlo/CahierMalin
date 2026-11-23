@@ -326,6 +326,28 @@ function prefetchSpeech(items){
   })();
 }
 
+// Pre-genere les sons de toute la liste (mots et phrases) : ils restent en cache sur le serveur,
+// la dictée du jour J n'attend plus l'IA. Un son a la fois ; on s'arrete au premier echec.
+function prepareVoices(listId){
+  var list = getList(listId), items = [], seen = {};
+  list.words.forEach(function(w){
+    [w.w, w.s].forEach(function(t){ if(t && !seen[t]){ seen[t] = true; items.push(t); } });
+  });
+  var st = $('#voiceStatus'), btn = $('#btnVoices'), i = 0, failed = 0;
+  btn.setAttribute('disabled','true');
+  (function next(){
+    if(i >= items.length || failed >= 3){
+      btn.removeAttribute('disabled');
+      st.textContent = failed >= 3 ? 'Voix interrompue (le serveur ne répond pas) : ' + i + '/' + items.length + ' sons prêts. Tu peux relancer.' : 'Voix prêtes : ' + items.length + ' sons gardés sur le serveur.';
+      return;
+    }
+    st.textContent = 'Préparation des voix… ' + i + '/' + items.length;
+    fetchAudio(items[i++]).then(next, function(){ failed++; next(); });
+  })();
+}
+
+$('#btnVoices').addEventListener('click', function(){ prepareVoices(nav.listId); });
+
 /* ---------------- diff (LCS-based) ---------------- */
 function diffWords(correct, typed){
   var a = correct.split(''), b = typed.split('');
@@ -486,6 +508,7 @@ function openDashboard(listId){
 
 function renderDashboard(){
   var list = getList(nav.listId);
+  $('#btnVoices').hidden = !serverCfg.tts; $('#voiceStatus').textContent = '';
   var X = targetCount();
   var sc = scoreOfLists([list]);
   var acquiredN = list.words.filter(function(w){ return isAcquired(list.id, w.w); }).length;

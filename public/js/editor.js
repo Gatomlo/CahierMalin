@@ -188,8 +188,51 @@ var declData = [];
 function currentLines(){ return $('#listWords').value.split('\n').map(function(l){ return l.trim(); }).filter(Boolean); }
 function lineWord(line){ return line.split(';')[0].trim(); }
 
+/* Choix des mots a decliner : evite de solliciter l'IA pour tout le vocabulaire. */
+var VERBE_RE = /(er|ir|re|oir)$/i;
+function pickableWords(){ return currentLines().filter(function(l){ return !parseConjLine(l); }).map(lineWord); }
+function renderPicker(mode){
+  var box = $('#declPick'); box.innerHTML = '';
+  var bar = el('div',{class:'decl-opts'});
+  [['all','Tous'],['none','Aucun'],['verbs','Verbes probables'],['others','Sans les verbes']].forEach(function(b){
+    var btn = el('button',{type:'button',class:'btn btn-ghost'}, b[1]);
+    btn.addEventListener('click', function(){ renderPicker(b[0]); });
+    bar.appendChild(btn);
+  });
+  box.appendChild(bar);
+  var grid = el('div',{class:'decl-pick-grid'});
+  var seen = {};
+  pickableWords().forEach(function(w){
+    if(seen[w.toLowerCase()]) return; seen[w.toLowerCase()] = true;
+    var on = mode === 'all' || (mode === 'verbs' && VERBE_RE.test(w) && w.indexOf(' ') === -1) || (mode === 'others' && !(VERBE_RE.test(w) && w.indexOf(' ') === -1));
+    var lab = el('label',{class:'decl-check'});
+    lab.innerHTML = '<input type="checkbox" value="'+escapeHtml(w)+'"'+(on ? ' checked' : '')+'> '+escapeHtml(w);
+    grid.appendChild(lab);
+  });
+  box.appendChild(grid);
+}
+$('#btnPick').addEventListener('click', function(){
+  var box = $('#declPick');
+  box.hidden = !box.hidden;
+  if(!box.hidden) renderPicker('all');
+});
+// Collage d'une liste sur une seule ligne (virgules, tabulations) : un mot par ligne.
+$('#listWords').addEventListener('paste', function(ev){
+  var t = (ev.clipboardData || window.clipboardData).getData('text');
+  if(!t || /\n/.test(t) || !/[,\t]/.test(t)) return;
+  ev.preventDefault();
+  var lines = t.split(/[,\t]+/).map(function(x){ return x.trim(); }).filter(Boolean).join('\n');
+  var a = this, v = a.value, s = a.selectionStart, e = a.selectionEnd;
+  a.value = v.slice(0, s) + lines + v.slice(e);
+  a.dispatchEvent(new Event('input'));
+});
+
 $('#btnDecline').addEventListener('click', function(){
-  var words = currentLines().filter(function(l){ return !parseConjLine(l); }).map(lineWord);
+  var words = pickableWords();
+  if(!$('#declPick').hidden){
+    var picked = Array.prototype.map.call(document.querySelectorAll('#declPick input:checked'), function(i){ return i.value; });
+    words = words.filter(function(w){ return picked.indexOf(w) !== -1; });
+  }
   var status = $('#declStatus'), results = $('#declResults');
   results.innerHTML = '';
   if(!words.length){ status.textContent = "Écris d'abord quelques mots dans la liste."; return; }

@@ -69,6 +69,7 @@
       <div class="score-track"><span id="dashScoreBar" style="width:0%"></span></div>
       <p class="score-detail" id="dashScoreDetail"></p>
     </div>
+    <div class="voice-prep"><button type="button" class="btn btn-ghost" id="btnVoices" hidden>Préparer les voix de la liste</button> <span class="hint" id="voiceStatus"></span></div>
     <div class="seg" role="group" aria-label="Type d'entraînement">
       <button type="button" class="seg-btn" id="segLearn" aria-pressed="true">À apprendre</button>
       <button type="button" class="seg-btn" id="segAll" aria-pressed="false">Tout revoir</button>
@@ -284,6 +285,8 @@
           <label class="decl-check"><input type="checkbox" id="declConj"> Conjugaison</label>
         </div>
         <div class="decl-opts" id="declTemps" hidden></div>
+        <div class="decl-opts"><button type="button" class="btn btn-ghost" id="btnPick">Choisir les mots à décliner</button></div>
+        <div id="declPick" hidden></div>
         <div class="decl-opts"><button type="button" class="btn btn-ghost" id="btnDecline">Proposer des formes</button>
           <button type="button" class="btn btn-ghost" id="btnPhrases" hidden>Ajouter des phrases d'exemple</button></div>
         <span class="hint" id="declStatus"></span>
