@@ -583,3 +583,6 @@ body.dys, body.dys button, body.dys input, body.dys textarea{ font-family:'Lexen
 body.text-l{ zoom:1.15; }
 body.text-xl{ zoom:1.3; }
 body.focus-mode .progress-cluster, body.focus-mode .page-head .lede, body.focus-mode .sub, body.focus-mode .today-hint, body.focus-mode .sync-badge, body.focus-mode .unlock-hint, body.focus-mode .words-panel{ display:none !important; }
+
+/* ---------- course contre la montre ---------- */
+.race-clock{ font-size:3rem; font-weight:700; text-align:center; font-variant-numeric:tabular-nums; }

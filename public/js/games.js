@@ -334,6 +334,15 @@ function renderQuiz(){
   updateProgress('quiz');
   var stage = $('#quizStage');
   stage.innerHTML = '';
+  // Variante « Trouve l'erreur » : 3 mots de la liste bien ecrits + 1 mot mal ecrit, a repérer.
+  var others = shuffle(getList(nav.listId).words.filter(function(w){ return w.w !== item.w && w.w.indexOf(' ') === -1; })).slice(0, 3);
+  var canErr = others.length === 3 && item.w.indexOf(' ') === -1;
+  if(canErr){
+    var tog = el('button',{class:'btn btn-ghost', type:'button', style:'padding:4px 12px;font-size:.8rem;margin-bottom:8px;', 'aria-pressed': state.settings.quizErreur ? 'true' : 'false'}, 'Trouve l’erreur : ' + (state.settings.quizErreur ? 'oui' : 'non'));
+    tog.addEventListener('click', function(){ state.settings.quizErreur = !state.settings.quizErreur; saveState(); renderQuiz(); });
+    stage.appendChild(tog);
+  }
+  if(canErr && state.settings.quizErreur){ renderQuizErreur(item, others, stage); return; }
   if(item.s){
     var blanked = item.s.replace(new RegExp(escapeRegex(item.w),'i'), '<span class="blank">&nbsp;</span>');
     stage.appendChild(el('div',{class:'sentence-display'}, blanked));
@@ -929,3 +938,102 @@ function paintHangman(item){
   }
 }
 
+
+/* ---------------- COURSE CONTRE LA MONTRE ---------------- */
+var RACE_SECONDS = 60;
+function raceBest(){ return ((state.settings.race || {})[nav.listId]) || 0; }
+function renderRaceIntro(){
+  var stage = $('#raceStage');
+  stage.innerHTML = '';
+  stage.appendChild(el('div',{class:'adv-title'}, 'Course contre la montre'));
+  stage.appendChild(el('p',{class:'sentence-display'}, RACE_SECONDS + ' secondes : écoute chaque mot et écris-le le plus vite possible. Entrée pour valider.'));
+  stage.appendChild(el('p',{class:'hint'}, raceBest() ? 'Ton record sur cette liste : ' + raceBest() + ' mot' + (raceBest()>1?'s':'') + '.' : 'Pas encore de record sur cette liste.'));
+  var go = el('button',{class:'btn btn-primary btn-lg'}, 'Partir !');
+  go.addEventListener('click', startRace);
+  stage.appendChild(go);
+}
+function startRace(){
+  nav.race = { score:0, left:RACE_SECONDS, pool:[], over:false };
+  nav.results = [];
+  var stage = $('#raceStage');
+  stage.innerHTML = '';
+  var clock = el('div',{class:'race-clock'}, String(RACE_SECONDS));
+  var score = el('div',{class:'hint'}, '0 mot juste');
+  stage.appendChild(clock); stage.appendChild(score);
+  var area = el('div');
+  stage.appendChild(area);
+  var timer = setInterval(function(){
+    if(nav.screen !== 'race' || nav.mode !== 'race'){ clearInterval(timer); return; }
+    nav.race.left--;
+    clock.textContent = String(Math.max(0, nav.race.left));
+    if(nav.race.left <= 0){ clearInterval(timer); endRace(); }
+  }, 1000);
+  function nextWord(){
+    if(nav.race.over) return;
+    if(!nav.race.pool.length) nav.race.pool = shuffle(nav.round.slice());
+    var item = nav.race.pool.pop();
+    area.innerHTML = '';
+    var replay = el('button',{class:'speak-btn replay'}, ICON_REPLAY + 'Réécouter');
+    replay.addEventListener('click', function(){ speak(item.w); });
+    area.appendChild(replay);
+    var input = el('input',{class:'answer-input', type:'text', autocomplete:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Écris le mot', 'aria-label':'Ta réponse'});
+    area.appendChild(input);
+    var busy = false;
+    function validate(){
+      if(busy || nav.race.over) return;
+      busy = true;
+      var ok = input.value.trim().toLowerCase() === item.w.toLowerCase();
+      recordAttempt(item.w, ok);
+      if(ok){ nav.race.score++; score.textContent = nav.race.score + ' mot' + (nav.race.score>1?'s':'') + ' juste' + (nav.race.score>1?'s':''); nextWord(); }
+      else {
+        area.appendChild(el('div',{class:'feedback-banner no'}, ICON_CROSS + 'C’était : ' + escapeHtml(item.w)));
+        setTimeout(nextWord, 900);
+      }
+    }
+    input.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') validate(); });
+    var ok = el('button',{class:'btn btn-primary btn-lg'}, 'Valider');
+    ok.addEventListener('click', validate);
+    area.appendChild(ok);
+    speak(item.w);
+    setTimeout(function(){ input.focus(); }, 50);
+  }
+  nextWord();
+}
+function endRace(){
+  if(!nav.race || nav.race.over) return;
+  nav.race.over = true;
+  var sc = nav.race.score, best = raceBest(), record = sc > best;
+  if(record){ state.settings.race = state.settings.race || {}; state.settings.race[nav.listId] = sc; saveState(); }
+  if(!nav.results.length){ openDashboard(nav.listId); return; }
+  finishRound();
+  var line = 'Course : ' + sc + ' mot' + (sc>1?'s':'') + ' en ' + RACE_SECONDS + ' s' + (record ? ' — nouveau record !' : ' (record : ' + best + ')');
+  $('#resultsScore').textContent = line + ' · ' + $('#resultsScore').textContent;
+}
+
+function renderQuizErreur(item, others, stage){
+  var wrong = makeDistractors(item.w, 1)[0];
+  stage.appendChild(el('p',{class:'sentence-display'}, 'Quel mot est mal écrit ?'));
+  var options = shuffle(others.map(function(w){ return w.w; }).concat([wrong]));
+  var grid = el('div',{class:'quiz-options'});
+  var answered = false;
+  options.forEach(function(opt){
+    var b = el('button',{class:'quiz-opt', type:'button'}, escapeHtml(opt));
+    b.addEventListener('click', function(){
+      if(answered) return;
+      answered = true;
+      var correct = opt === wrong;
+      recordAttempt(item.w, correct);
+      $all('.quiz-opt', grid).forEach(function(o){
+        o.setAttribute('disabled','true');
+        if(o.textContent === wrong) o.classList.add('correct');
+        else if(o === b) o.classList.add('wrong');
+      });
+      stage.appendChild(el('p',{class:'hint'}, 'Le bon mot : ' + escapeHtml(item.w) + '.'));
+      var next = el('button',{class:'btn btn-primary btn-lg', style:'margin-top:16px;'}, nav.idx+1 < nav.round.length ? 'Question suivante' : 'Voir le résultat');
+      next.addEventListener('click', function(){ nav.idx++; renderQuiz(); });
+      stage.appendChild(next);
+    });
+    grid.appendChild(b);
+  });
+  stage.appendChild(grid);
+}

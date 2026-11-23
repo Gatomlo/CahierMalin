@@ -3,13 +3,13 @@
 Entraînement aux mots de dictée (10 jeux : cache-cache, quiz, memory, mots mêlés, lettres mêlées, coffre-fort, pendu, phrase à trous, dictée-aventure, dictée audio), niveaux CP→champion par liste. Interface, commentaires et réponses **en français** ; commentaires de code sans accents.
 
 ## Stack
-Node ≥ 22.5 (`node:sqlite`), Express 4, front en **un seul fichier** `public/index.html` (JS vanilla, sans build). Origine : artéfact Claude « Le Cahier Malin » (RZ2wxpXmNJTktuJfX1ZbL1), devenu appli serveur.
+Node ≥ 22.5 (`node:sqlite`), Express 4, front sans build : `public/index.html` (structure), `public/style.css`, `public/js/{core,games,editor,app}.js` (scripts classiques chargés dans cet ordre, portée globale partagée, `'use strict'` en tête ; `tests/page.test.js` vérifie syntaxe et doublons de noms globaux). Origine : artéfact Claude « Le Cahier Malin » (RZ2wxpXmNJTktuJfX1ZbL1), devenu appli serveur.
 
 ## Fichiers clés
 - `server.js` : exporte `app` (écoute seulement si lancé directement, `PORT`) ; API `/api` : `GET|PUT /state`, `GET /config`, `POST /declinaisons`. Comptes parents + profils enfants : cookie de session `cm_session` (HttpOnly, 90 jours), en-tête `X-Profil` = numéro du profil (doit appartenir au compte).
 - `lib/db.js` : `data/cahier.db` (`CAHIER_DATA_DIR`) ; tables `lists`, `kv` (progress, stars, settings, gradeFloors en JSON par profil), `declinaisons` (cache IA). Migrations par `PRAGMA user_version`.
 - `lib/forms.js` : déclinaisons. Avec clé Gemini (réglage de l'app, modèle par défaut `gemini-2.5-flash`) : pluriel, féminin, conjugaison (5 temps), phrases d'exemple ; réponses nettoyées et mises en cache. Sans clé : règles locales pour les groupes avec article seulement.
-- `public/index.html` : état en mémoire, copie dans `localStorage` (hors ligne), synchro serveur au démarrage puis `PUT /state` (400 ms de délai) ; les URL d'API sont relatives (la racine redirige vers `/…/`).
+- `public/js/*.js` : état en mémoire, copie dans `localStorage` (hors ligne), synchro serveur au démarrage puis `PUT /state` (400 ms de délai) ; les URL d'API sont relatives (la racine redirige vers `/…/`).
 
 - `lib/conjugaison.js` : conjugaison locale (verbes réguliers en -er, liste de verbes en -ir type finir ; présent, imparfait, futur, conditionnel, passé composé avec avoir) ; le reste passe par Gemini. `POST /api/conjugaison` (syntaxe des listes), `POST /api/phrases` (phrases d'exemple, Gemini seulement).
 - Syntaxe de liste : `chanter (présent)` ou `chanter (présent : je, nous)` → une forme par personne, enregistrée comme mot ordinaire avec `g` = la ligne d'origine (l'éditeur la réaffiche repliée ; progression conservée à la réouverture). Jeu « Phrase à trous » : seulement les mots dont la phrase `s` contient le mot.
@@ -39,3 +39,8 @@ Au premier lancement après mise à jour la migration s'applique seule ; ouvrir 
 Tester par API/`npm test` avant toute capture. Le panneau « Décliner » est dans l'éditeur de liste (limite 12 mots par demande, 20 appels/min côté serveur).
 
 - Sécurité (branche `claude/security-fixes`) : derrière la passerelle, la création du premier compte exige le droit admin de la passerelle (plus de course au premier visiteur ; hors passerelle : inchangé, test `gateway-setup`) ; dépendances à jour (`npm audit` : 0).
+
+- Sauvegarde : `PUT /state` porte un numéro `rev` (kv `rev`) ; si l'appareil est en retard → 409 + état courant, la page fusionne (`mergeWithServer`) et renvoie. Badge de synchro dans l'en-tête.
+- Listes : colonnes `pending` (lignes de conjugaison non résolues, bouton « Relancer ») et `due` (date de dictée, compte à rebours + résumé parent). Déclinaisons et conjugaisons envoyées par lots de 12 (limite serveur).
+- Réglages de l'enfant dans `settings` (synchronisés) : `streak`, `race` (records), `quizErreur`. Préférences d'appareil en localStorage : concentration, police lisible, taille du texte. Jeux : « Trouve l'erreur » (variante du quiz) et « Course contre la montre » (`race`, 60 s).
+

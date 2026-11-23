@@ -11,6 +11,7 @@ var ICON_CROSS = '<svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5 
 var ICON_FLASH = '<svg viewBox="0 0 20 20" fill="none"><path d="M4 6h12v9H4z" stroke="currentColor" stroke-width="1.6"/><path d="M4 6l6 4 6-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 var ICON_QUIZ = '<svg viewBox="0 0 20 20" fill="none"><path d="M10 13v-.5c0-1 .6-1.4 1.3-1.9.7-.5 1.2-1 1.2-1.9A2.5 2.5 0 0 0 10 6.2 2.5 2.5 0 0 0 7.5 8.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="15.5" r=".9" fill="currentColor"/></svg>';
 var ICON_SCRAMBLE = '<svg viewBox="0 0 20 20" fill="none"><path d="M3 6h3l8 8h3M3 14h3l3-3M14 6h3M17 6l-2.3-2M17 6l-2.3 2M17 14l-2.3-2M17 14l-2.3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var ICON_CLOCK = '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="11" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M10 7.5V11l2.5 1.5M8 2.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 var ICON_HANGMAN = '<svg viewBox="0 0 20 20" fill="none"><path d="M4 17h5M6.5 17V3M6.5 3h6.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="13" cy="8.3" r="1.7" stroke="currentColor" stroke-width="1.6"/><path d="M13 10v3.5M11.2 12l1.8.8 1.8-.8M11.6 17l1.4-2 1.4 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
 var ICON_SAFE = '<svg viewBox="0 0 20 20" fill="none"><rect x="3" y="3.5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="9.5" r="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M6 15.5V17M14 15.5V17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
 var ICON_MEMORY ='<svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="5.5" width="8" height="11" rx="1.6" stroke="currentColor" stroke-width="1.6"/><rect x="9.5" y="3.5" width="8" height="11" rx="1.6" stroke="currentColor" stroke-width="1.6" fill="var(--surface)"/><path d="M13.5 7.5v3M12 9h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
@@ -150,7 +151,7 @@ var nav = { screen:'home', listId:null, mode:null, kind:'learn', reviewAll:false
 /* Chaque liste a son propre score en % et son propre grade : 100 % seulement
    quand chaque mot de la liste est acquis. Un grade atteint n'est jamais perdu,
    même si l'on ajoute des mots à la liste ensuite. */
-var MODE_IDS = ['flash','quiz','memory','wordsearch','scramble','safe','hangman','dictee','cloze','aventure'];
+var MODE_IDS = ['flash','quiz','memory','wordsearch','scramble','safe','hangman','dictee','cloze','aventure','race'];
 var GRADES = [
   { key:'cp', label:'CP', pct:0 },
   { key:'ce1', label:'CE1', pct:12 },
@@ -170,6 +171,7 @@ var MODE_DEFS = [
   { id:'hangman', title:'Le Pendu', desc:"Devine le mot lettre par lettre avant la fin du dessin.", icon:ICON_HANGMAN },
   { id:'aventure', title:'Dictée-aventure', desc:"Une histoire écrite pour toi avec tes mots : avance de chapitre en chapitre pour trouver le trésor.", icon:ICON_ADVENTURE },
   { id:'cloze', title:'Phrase à trous', desc:"Retrouve le mot qui manque dans une phrase simple et écris-le.", icon:ICON_CLOZE },
+  { id:'race', title:'Course contre la montre', desc:"60 secondes pour écrire un maximum de mots entendus. Bats ton record !", icon:ICON_CLOCK },
   { id:'dictee', title:'Dictée audio', desc:"Écoute le mot puis écris-le, sans aucune aide visuelle : la vraie dictée.", icon:ICON_SPEAKER }
 ];
 function targetCount(){
@@ -201,7 +203,7 @@ function currentGradeIdx(listId){
   if(idx > floor){ state.gradeFloors[listId] = idx; saveState(); floor = idx; }
   return Math.max(idx, floor);
 }
-var LIST_SCREENS = ['dashboard','flash','dictee','cloze','aventure','quiz','memory','wordsearch','scramble','safe','hangman','results'];
+var LIST_SCREENS = ['dashboard','flash','dictee','cloze','aventure','quiz','memory','wordsearch','scramble','safe','hangman','race','results'];
 function updateRankChip(){
   var chip = $('#rankChip');
   var list = getList(nav.listId);
@@ -256,7 +258,7 @@ function canPlay(mode, w){
   var n = wsClean(w.w).length;
   return n >= 3 && n <= 12;
 }
-function roundSizeFor(mode){ if(mode === 'aventure') return 8; return (mode === 'memory' || mode === 'wordsearch' || mode === 'safe') ? 6 : ROUND_SIZE; }
+function roundSizeFor(mode){ if(mode === 'aventure') return 8; if(mode === 'race') return 60; return (mode === 'memory' || mode === 'wordsearch' || mode === 'safe') ? 6 : ROUND_SIZE; }
 function eligibleWords(list, mode){
   return list.words.filter(function(w){
     if(!canPlay(mode, w)) return false;
@@ -656,6 +658,7 @@ function startMode(mode, kind){
   else if(mode==='memory') { goto('memory'); renderMemory(); }
   else if(mode==='wordsearch') { goto('wordsearch'); renderWordsearch(); }
   else if(mode==='safe') { goto('safe'); renderSafe(); }
+  else if(mode==='race') { goto('race'); renderRaceIntro(); }
 }
 
 /* ---------------- sons de reussite (Web Audio, rien a telecharger) ---------------- */

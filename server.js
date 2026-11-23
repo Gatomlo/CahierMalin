@@ -88,7 +88,7 @@ api.put('/state', auth.requireUser, profile, (req, res) => {
 });
 
 // Journal des essais (suivi des parents) : lots envoyes par l'appareil.
-const MODES = ['flash', 'quiz', 'memory', 'wordsearch', 'scramble', 'safe', 'hangman', 'dictee', 'cloze', 'aventure'];
+const MODES = ['flash', 'quiz', 'memory', 'wordsearch', 'scramble', 'safe', 'hangman', 'dictee', 'cloze', 'aventure', 'race'];
 api.post('/events', auth.requireUser, profile, (req, res) => {
   const list = Array.isArray((req.body || {}).events) ? req.body.events.slice(0, 50) : [];
   const now = Date.now();
