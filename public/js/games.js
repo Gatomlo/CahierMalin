@@ -95,15 +95,21 @@ function renderCloze(){
   updateProgress('cloze');
   paintClozePrompt(item);
 }
+/* Verbes conjugues : le pronom reste ecrit dans la phrase, seul le verbe est a trouver. */
+function clozeSplit(item){
+  var m = item.g ? /^(j['’]|je |tu |il |elle |nous |vous |ils |elles )(.+)$/i.exec(item.w) : null;
+  return m ? { pron:m[1], rest:m[2] } : { pron:'', rest:item.w };
+}
 function paintClozePrompt(item){
   var stage = $('#clozeStage');
   stage.innerHTML = '';
   stage.appendChild(el('p',{class:'sentence-display'}, 'Complète la phrase avec le mot qui manque.'));
   if(item.g) stage.appendChild(el('p',{class:'sentence-display'}, 'Verbe : ' + escapeHtml(item.g.replace(/\s*:[^)]*\)/, ')'))));
   var m = sentenceRegex(item.w).exec(item.s);
-  var html = escapeHtml(item.s.slice(0, m.index)) + '<span class="blank" style="min-width:'+Math.max(2.4, item.w.length*0.6)+'em"></span>' + escapeHtml(item.s.slice(m.index + m[0].length));
+  var cs = clozeSplit(item), cut = m.index + cs.pron.length;
+  var html = escapeHtml(item.s.slice(0, cut)) + '<span class="blank" style="min-width:'+Math.max(2.4, cs.rest.length*0.6)+'em"></span>' + escapeHtml(item.s.slice(m.index + m[0].length));
   stage.appendChild(el('div',{class:'sentence-display', style:'font-size:1.25rem;color:var(--ink);line-height:1.8;'}, html));
-  var input = el('input',{class:'answer-input', type:'text', autocomplete:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Écris le mot qui manque', 'aria-label':'Ta réponse'});
+  var input = el('input',{class:'answer-input', type:'text', autocomplete:'off', autocapitalize:'off', spellcheck:'false', placeholder: cs.pron ? 'Écris le verbe (le pronom est déjà écrit)' : 'Écris le mot qui manque', 'aria-label':'Ta réponse'});
   stage.appendChild(input);
   var check = el('button',{class:'btn btn-primary btn-lg'}, 'Vérifier');
   check.addEventListener('click', function(){ paintClozeCheck(item, input.value); });
@@ -113,12 +119,15 @@ function paintClozePrompt(item){
 }
 function paintClozeCheck(item, typed){
   typed = (typed||'').trim();
-  var correct = sameWord(typed, item.w);
+  var cs = clozeSplit(item);
+  var full = sameWord(typed, item.w);          // l'enfant a aussi retape le pronom : accepte
+  var correct = full || sameWord(typed, cs.rest);
+  var target = full ? item.w : cs.rest;
   recordAttempt(item.w, correct);
   var stage = $('#clozeStage');
   stage.innerHTML = '';
   stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
-  stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(item.w, typed || ' '))));
+  stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(target, typed || ' '))));
   var m = sentenceRegex(item.w).exec(item.s);
   stage.appendChild(el('div',{class:'sentence-display', style:'color:var(--ink);'}, escapeHtml(item.s.slice(0, m.index)) + '<strong>' + escapeHtml(m[0]) + '</strong>' + escapeHtml(item.s.slice(m.index + m[0].length))));
   var listen = el('button',{class:'speak-btn replay'}, ICON_SPEAKER + 'Écouter la phrase');
