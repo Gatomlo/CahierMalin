@@ -291,3 +291,18 @@ test('Gemini surcharge (503) : nouvel essai automatique puis message clair', asy
   assert.match((await test()).error, /surchargé en ce moment/);
   await put({ model: 'gemini-flash-latest', clearKey: true });
 });
+
+test('PUT /state : un appareil en retard recoit 409 et l\'etat courant', async () => {
+  const s = await (await call('/api/state')).json();
+  const put = (body) => call('/api/state', { method: 'PUT', body: JSON.stringify(body) });
+  const r1 = await put({ ...s, rev: s.rev });
+  assert.equal(r1.status, 200);
+  const rev1 = (await r1.json()).rev;
+  assert.ok(rev1 > (s.rev || 0));
+  const stale = await put({ ...s, rev: s.rev || 0, lists: [] });
+  assert.equal(stale.status, 409);
+  const j = await stale.json();
+  assert.equal(j.stale, true);
+  assert.ok(j.state.lists.length > 0, 'les listes du serveur sont conservees');
+  assert.equal((await put({ ...s, rev: rev1 })).status, 200);
+});

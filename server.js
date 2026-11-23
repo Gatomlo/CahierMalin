@@ -77,10 +77,13 @@ api.put('/state', auth.requireUser, profile, (req, res) => {
   if (err) return res.status(400).json({ error: err });
   // Le reglage "reussites pour acquerir un mot" appartient aux parents : l'enfant ne le modifie pas.
   const cur = db.getState(req.pkey);
+  // Numero de version : un appareil qui n'a pas la derniere version ne l'ecrase pas (409 + etat courant).
+  const rev = cur.rev || 0;
+  if (cur.exists && Number.isInteger(req.body.rev) && req.body.rev !== rev) return res.status(409).json({ error: 'Version périmée.', stale: true, state: cur });
   const settings = Object.assign({}, req.body.settings || {});
   if (cur.exists) { if (cur.settings && cur.settings.target) settings.target = cur.settings.target; else delete settings.target; }
-  db.saveState(req.pkey, Object.assign({}, req.body, { settings }));
-  res.json({ ok: true });
+  db.saveState(req.pkey, Object.assign({}, req.body, { settings, rev: rev + 1 }));
+  res.json({ ok: true, rev: rev + 1 });
 });
 
 // Journal des essais (suivi des parents) : lots envoyes par l'appareil.

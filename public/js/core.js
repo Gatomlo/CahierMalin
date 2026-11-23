@@ -82,14 +82,56 @@ function apiFetch(path, opts){
     return r.json();
   });
 }
-function pushState(){
-  return apiFetch('api/state', { method:'PUT', body: JSON.stringify(state) }).catch(function(){ toast('Enregistré sur cet appareil seulement (serveur injoignable).'); });
+/* Fusion quand un autre appareil a enregistre entre-temps : listes du serveur + listes locales
+   absentes du serveur ; progression et etoiles : on garde le plus avance de chaque cote. */
+function mergeMax(a, b){
+  if(typeof a === 'number' && typeof b === 'number') return Math.max(a, b);
+  if(a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)){
+    var out = {}; Object.keys(b).forEach(function(k){ out[k] = b[k]; });
+    Object.keys(a).forEach(function(k){ out[k] = k in b ? mergeMax(a[k], b[k]) : a[k]; });
+    return out;
+  }
+  return a !== undefined ? a : b;
+}
+function mergeWithServer(local, server){
+  var ids = {}; server.lists.forEach(function(l){ ids[l.id] = true; });
+  return {
+    lists: server.lists.concat(local.lists.filter(function(l){ return !ids[l.id]; })),
+    progress: mergeMax(local.progress || {}, server.progress || {}),
+    stars: Math.max(local.stars || 0, server.stars || 0),
+    settings: Object.assign({}, local.settings, server.settings),
+    gradeFloors: mergeMax(local.gradeFloors || {}, server.gradeFloors || {}),
+    rev: server.rev || 0
+  };
+}
+var syncStatus = 'ok';
+function setSyncStatus(s){
+  syncStatus = s;
+  var b = document.getElementById('syncBadge');
+  if(b){ b.textContent = s === 'ok' ? 'Synchronisé' : (s === 'pending' ? 'En attente de synchro' : 'Hors ligne'); b.className = 'sync-badge ' + s; }
+}
+function pushState(retry){
+  setSyncStatus('pending');
+  return apiFetch('api/state', { method:'PUT', body: JSON.stringify(state) }).then(function(r){
+    state.rev = r.rev; try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    setSyncStatus('ok');
+  }).catch(function(e){
+    if(e.status === 409 && e.data && e.data.state && !retry){
+      state = mergeWithServer(state, e.data.state);
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(x){}
+      toast('Un autre appareil avait enregistré : les données ont été fusionnées.');
+      renderHome();
+      return pushState(true);
+    }
+    setSyncStatus('offline');
+    toast('Enregistré sur cet appareil seulement (serveur injoignable).');
+  });
 }
 function syncFromServer(){
   serverLoaded = false;
   return apiFetch('api/state').then(function(s){
     if(s.exists){
-      state = { lists:s.lists, progress:s.progress || {}, stars:s.stars || 0, settings:s.settings || {}, gradeFloors:s.gradeFloors || {} };
+      state = { lists:s.lists, progress:s.progress || {}, stars:s.stars || 0, settings:s.settings || {}, gradeFloors:s.gradeFloors || {}, rev:s.rev || 0 };
       if(!state.settings.target) state.settings.target = 3;
       try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
     }
