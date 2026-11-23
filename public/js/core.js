@@ -559,6 +559,9 @@ function renderDashboard(){
   $('#dashModeHint').textContent = nav.reviewAll
     ? 'Tous les mots sont proposés, même ceux déjà acquis. Ta progression ne change pas.'
     : 'Seuls les mots pas encore réussis dans chaque exercice sont proposés.';
+  var rc = $('#ruleCard');
+  if(list.rule){ rc.hidden = false; rc.innerHTML = '<strong>À retenir : ' + escapeHtml(list.rule.nom) + '</strong>' + (list.rule.memo ? escapeHtml(list.rule.memo) : ''); }
+  else { rc.hidden = true; rc.innerHTML = ''; }
   renderModesGrid(list.id);
   renderWordsPanel(list);
 }

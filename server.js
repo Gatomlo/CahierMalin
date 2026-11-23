@@ -63,6 +63,7 @@ function checkState(b) {
     if (l.id.length > 60 || l.name.length > 120) return 'Liste invalide.';
     if (l.due !== undefined && (typeof l.due !== 'string' || (l.due !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(l.due)))) return 'Liste invalide.';
     if (l.pending !== undefined && (!Array.isArray(l.pending) || l.pending.length > 100 || l.pending.some((x) => typeof x !== 'string' || x.length > 200))) return 'Liste invalide.';
+    if (l.rule !== undefined && (!isObj(l.rule) || typeof l.rule.nom !== 'string' || !l.rule.nom.trim() || l.rule.nom.length > 80 || (l.rule.memo !== undefined && (typeof l.rule.memo !== 'string' || l.rule.memo.length > 500)))) return 'Règle invalide.';
     for (const w of l.words) if (!isObj(w) || typeof w.w !== 'string' || w.w.length > 120 || (w.s !== undefined && typeof w.s !== 'string')) return 'Mot invalide.';
   }
   if (b.progress !== undefined && !isObj(b.progress)) return 'Progression invalide.';
@@ -118,7 +119,10 @@ api.post('/conjugaison', auth.requireUser, limit, async (req, res, next) => {
   try { res.json(await forms.conjugateEntries((req.body || {}).verbes)); } catch (e) { next(e); }
 });
 api.post('/phrases', auth.requireUser, limit, async (req, res, next) => {
-  try { res.json(await forms.phrases((req.body || {}).mots)); } catch (e) { next(e); }
+  try { res.json(await forms.phrases((req.body || {}).mots, (req.body || {}).regle)); } catch (e) { next(e); }
+});
+api.post('/regle', auth.requireUser, limit, async (req, res, next) => {
+  try { res.json(await forms.regle((req.body || {}).nom)); } catch (e) { next(e); }
 });
 api.post('/aventure', auth.requireUser, limit, async (req, res, next) => {
   try { const b = req.body || {}; res.json(await forms.adventure(b.mots, b.anciens, b.chapitres, b.theme)); } catch (e) { next(e); }

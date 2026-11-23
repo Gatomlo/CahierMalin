@@ -68,6 +68,7 @@
       <h2 class="page-title" id="dashTitle"></h2>
       <p class="lede">Choisis un jeu pour réviser cette liste. Tu peux changer de jeu à tout moment.</p>
     </div>
+    <div class="rule-card" id="ruleCard" hidden></div>
     <div class="score-block">
       <div class="score-top"><span class="score-label">Progression de la liste</span><span class="score-pct" id="dashScorePct">0 %</span></div>
       <div class="score-track"><span id="dashScoreBar" style="width:0%"></span></div>
@@ -285,6 +286,14 @@
         <label for="listDue">Date de la dictée (facultatif)</label>
         <input type="date" id="listDue">
         <span class="hint">Affiche un compte à rebours sur la liste et dans le suivi des parents.</span>
+      </div>
+      <div class="field">
+        <label for="listRule">Règle de grammaire à travailler (facultatif)</label>
+        <input type="text" id="listRule" list="ruleChoices" maxlength="80" placeholder="Ex. Accord de l’adjectif">
+        <datalist id="ruleChoices"><option value="Accord de l’adjectif"><option value="Accord du participe passé"><option value="Pluriel des noms"><option value="Féminin des noms et adjectifs"><option value="Accord sujet-verbe"><option value="a / à"><option value="et / est"><option value="on / ont"><option value="son / sont"><option value="ce / se"></datalist>
+        <textarea id="listRuleMemo" rows="3" maxlength="500" placeholder="Rappel affiché à l’enfant (facultatif)" hidden></textarea>
+        <span class="hint" id="ruleStatus">Sans règle, la liste fonctionne comme d’habitude.</span>
+        <button type="button" class="btn btn-ghost" id="btnRuleMemo" hidden>Rédiger le rappel avec l’IA</button>
       </div>
       <div class="field">
         <label for="listWords">Mots à apprendre</label>

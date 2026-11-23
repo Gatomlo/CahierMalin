@@ -42,5 +42,6 @@ Tester par API/`npm test` avant toute capture. Le panneau « Décliner » est da
 
 - Sauvegarde : `PUT /state` porte un numéro `rev` (kv `rev`) ; si l'appareil est en retard → 409 + état courant, la page fusionne (`mergeWithServer`) et renvoie. Badge de synchro dans l'en-tête.
 - Listes : colonnes `pending` (lignes de conjugaison non résolues, bouton « Relancer ») et `due` (date de dictée, compte à rebours + résumé parent). Déclinaisons et conjugaisons envoyées par lots de 12 (limite serveur).
+- Listes : colonne `rule` (JSON `{nom, memo}`, facultative, absente = comportement inchangé). Affichée en carte « À retenir » sur le tableau de bord et après une erreur en phrase à trous ; `POST /api/regle` rédige le rappel (Gemini), `/api/phrases` reçoit `regle` pour des phrases qui la mettent en jeu. Migration 6.
 - Réglages de l'enfant dans `settings` (synchronisés) : `streak`, `race` (records), `quizErreur`. Préférences d'appareil en localStorage : concentration, police lisible, taille du texte. Jeux : « Trouve l'erreur » (variante du quiz) et « Course contre la montre » (`race`, 60 s).
 

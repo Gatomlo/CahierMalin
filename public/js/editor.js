@@ -46,6 +46,26 @@ function updateWordCountHint(){
   }
 }
 $('#listWords').addEventListener('input', updateWordCountHint);
+/* Regle de grammaire : facultative, sans nom de regle rien ne change. */
+function readRule(){
+  var nom = $('#listRule').value.trim();
+  if(!nom) return null;
+  var memo = $('#listRuleMemo').value.trim();
+  return memo ? { nom: nom, memo: memo } : { nom: nom };
+}
+function syncRuleFields(){
+  var has = !!$('#listRule').value.trim();
+  $('#listRuleMemo').hidden = !has;
+  $('#btnRuleMemo').hidden = !(has && serverCfg && serverCfg.gemini);
+}
+$('#listRule').addEventListener('input', syncRuleFields);
+$('#btnRuleMemo').addEventListener('click', function(){
+  var btn = $('#btnRuleMemo'), st = $('#ruleStatus');
+  btn.setAttribute('disabled','true'); st.textContent = 'Rédaction du rappel…';
+  apiFetch('api/regle', { method:'POST', body: JSON.stringify({ nom: $('#listRule').value.trim() }) }).then(function(r){
+    $('#listRuleMemo').value = r.memo; st.textContent = 'Relis le rappel avant d’enregistrer.';
+  }).catch(function(e){ st.textContent = e.message; }).then(function(){ btn.removeAttribute('disabled'); });
+});
 function openEditor(listId){
   editingListId = listId || null;
   var form = $('#editorForm');
@@ -54,16 +74,20 @@ function openEditor(listId){
     $('#editorEyebrow').textContent = 'Modifier la liste';
     $('#listName').value = list.name;
     $('#listDue').value = list.due || '';
+    $('#listRule').value = list.rule ? list.rule.nom : '';
+    $('#listRuleMemo').value = list.rule && list.rule.memo || '';
     $('#listWords').value = listToText(list);
     $('#btnDeleteList').style.display = 'inline-flex';
   } else {
     $('#editorEyebrow').textContent = 'Nouvelle liste';
     $('#listName').value = '';
     $('#listDue').value = '';
+    $('#listRule').value = '';
+    $('#listRuleMemo').value = '';
     $('#listWords').value = '';
     $('#btnDeleteList').style.display = 'none';
   }
-  updateWordCountHint();
+  syncRuleFields(); updateWordCountHint();
   goto('editor');
 }
 // Lignes -> mots. Les lignes "verbe (temps)" deviennent une forme par personne (mots
@@ -133,10 +157,12 @@ $('#editorForm').addEventListener('submit', function(ev){
       var list = getList(editingListId);
       list.name = name; list.words = words;
       if($('#listDue').value) list.due = $('#listDue').value; else delete list.due;
+      var rl = readRule(); if(rl) list.rule = rl; else delete list.rule;
       if(words.skipped.length) list.pending = words.skipped; else delete list.pending;
     } else {
       var nl = { id: 'list_'+Date.now(), name: name, words: words };
       if($('#listDue').value) nl.due = $('#listDue').value;
+      var rl2 = readRule(); if(rl2) nl.rule = rl2;
       if(words.skipped.length) nl.pending = words.skipped;
       state.lists.push(nl);
     }
@@ -167,6 +193,7 @@ function loadConfig(){
   return apiFetch('api/config').then(function(c){
     serverCfg = c;
     if(c.gemini) $('#btnPhrases').hidden = false;
+    syncRuleFields();
     if(nav.screen === 'dashboard') renderDashboard();
   }).catch(function(){});
 }
@@ -178,7 +205,7 @@ $('#btnPhrases').addEventListener('click', function(){
   if(need.length > 25){ status.textContent = '25 mots au maximum à la fois.'; return; }
   var btn = $('#btnPhrases'); btn.setAttribute('disabled','true');
   status.textContent = 'Écriture des phrases…';
-  apiFetch('api/phrases', { method:'POST', body: JSON.stringify({ mots:need }) }).then(function(r){
+  apiFetch('api/phrases', { method:'POST', body: JSON.stringify({ mots:need, regle: ($('#listRule').value || '').trim() }) }).then(function(r){
     var n = 0;
     $('#listWords').value = lines.map(function(l){
       if(r.phrases[l]){ n++; return l + ' ; ' + r.phrases[l]; }

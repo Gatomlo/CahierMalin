@@ -306,3 +306,18 @@ test('PUT /state : un appareil en retard recoit 409 et l\'etat courant', async (
   assert.ok(j.state.lists.length > 0, 'les listes du serveur sont conservees');
   assert.equal((await put({ ...s, rev: rev1 })).status, 200);
 });
+
+test('regle de grammaire : facultative, relue telle quelle, invalide refusee, absente = inchange', async () => {
+  const s = await (await call('/api/state')).json();
+  const put = (lists) => call('/api/state', { method: 'PUT', body: JSON.stringify({ ...s, rev: undefined, lists }) });
+  const mots = [{ w: 'chat' }];
+  const avec = { id: 'r1', name: 'Avec', words: mots, rule: { nom: 'Accord de l’adjectif', memo: 'L’adjectif s’accorde.' } };
+  const sans = { id: 'r2', name: 'Sans', words: mots };
+  assert.equal((await put([avec, sans])).status, 200);
+  const back = (await (await call('/api/state')).json()).lists;
+  assert.deepEqual(back.find((l) => l.id === 'r1').rule, avec.rule);
+  assert.equal('rule' in back.find((l) => l.id === 'r2'), false);
+  assert.equal((await put([{ ...sans, rule: { nom: '' } }])).status, 400);
+  assert.equal((await put([{ ...sans, rule: 'texte' }])).status, 400);
+  assert.equal((await call('/api/regle', { method: 'POST', body: JSON.stringify({ nom: 'x' }) })).status, 400); // sans cle Gemini
+});
