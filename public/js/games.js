@@ -30,6 +30,11 @@ function paintFlashWrite(item){
   stage.appendChild(btn);
   input.focus();
 }
+/* Rappel de la regle de la liste apres une erreur (rien si la liste n'a pas de regle). */
+function ruleReminder(stage, correct){
+  var rl = getList(nav.listId).rule;
+  if(!correct && rl) stage.appendChild(el('div',{class:'rule-card small'}, '<strong>À retenir : ' + escapeHtml(rl.nom) + '</strong>' + (rl.memo ? escapeHtml(rl.memo) : '')));
+}
 function paintFlashCheck(item, typed){
   typed = (typed||'').trim();
   var correct = typed.toLowerCase() === item.w.toLowerCase();
@@ -38,6 +43,7 @@ function paintFlashCheck(item, typed){
   stage.innerHTML = '';
   stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
   stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(item.w, typed || ' '))));
+  ruleReminder(stage, correct);
   if(!correct) stage.appendChild(el('div',{class:'sentence-display'}, 'Le mot correct : ' + escapeHtml(item.w)));
   var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
   next.addEventListener('click', function(){ nav.idx++; renderFlash(); });
@@ -79,6 +85,7 @@ function paintDicteeCheck(item, typed){
   stage.innerHTML = '';
   stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
   stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(item.w, typed || ' '))));
+  ruleReminder(stage, correct);
   if(item.s) stage.appendChild(el('div',{class:'sentence-display'}, escapeHtml(item.s)));
   var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
   next.addEventListener('click', function(){ nav.idx++; renderDictee(); });
@@ -128,8 +135,7 @@ function paintClozeCheck(item, typed){
   stage.innerHTML = '';
   stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
   stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(target, typed || ' '))));
-  var rl = getList(nav.listId).rule;
-  if(!correct && rl) stage.appendChild(el('div',{class:'rule-card small'}, '<strong>À retenir : ' + escapeHtml(rl.nom) + '</strong>' + (rl.memo ? escapeHtml(rl.memo) : '')));
+  ruleReminder(stage, correct);
   var m = sentenceRegex(item.w).exec(item.s);
   stage.appendChild(el('div',{class:'sentence-display', style:'color:var(--ink);'}, escapeHtml(item.s.slice(0, m.index)) + '<strong>' + escapeHtml(m[0]) + '</strong>' + escapeHtml(item.s.slice(m.index + m[0].length))));
   var listen = el('button',{class:'speak-btn replay'}, ICON_SPEAKER + 'Écouter la phrase');
@@ -484,6 +490,7 @@ function paintScrambleCheck(item, typed){
   stage.innerHTML = '';
   stage.appendChild(el('div',{class:'feedback-banner '+(correct?'ok':'no')}, (correct?ICON_CHECK:ICON_CROSS) + (correct? 'Exact !' : 'Pas tout à fait')));
   stage.appendChild(el('div',{class:'diff-line'}, renderDiff(diffWords(item.w, typed))));
+  ruleReminder(stage, correct);
   if(!correct) stage.appendChild(el('div',{class:'sentence-display'}, 'Le mot correct : ' + escapeHtml(item.w)));
   var next = el('button',{class:'btn btn-primary btn-lg'}, nav.idx+1 < nav.round.length ? 'Mot suivant' : 'Voir le résultat');
   next.addEventListener('click', function(){ nav.idx++; renderScramble(); });

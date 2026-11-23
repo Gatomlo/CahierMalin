@@ -404,6 +404,14 @@ function renderSuivi(p){
       row.innerHTML = '<span class="nm">' + escapeHtml(modeTitle(j.mode)) + '</span><span class="mini-track"><span style="width:' + r + '%"></span></span><span class="val">' + r + ' % · ' + j.n + '</span>';
       card.appendChild(row);
     });
+    if(d.regles && d.regles.length){
+      card.appendChild(el('h3',{class:'wg-title',style:'margin-top:14px;'}, 'Règles de grammaire'));
+      d.regles.forEach(function(g){
+        var r = pct(g.ok, g.n), row = el('div',{class:'mini-row'});
+        row.innerHTML = '<span class="nm">' + escapeHtml(g.nom) + ' <small>' + escapeHtml(g.listes.join(', ')) + '</small></span><span class="mini-track"><span style="width:' + r + '%"></span></span><span class="val">' + (g.n ? r + ' % · ' + g.n : 'pas encore travaillée') + '</span>';
+        card.appendChild(row);
+      });
+    }
     card.appendChild(el('h3',{class:'wg-title',style:'margin-top:14px;'}, 'Mots à revoir'));
     if(!d.mots.length) card.appendChild(el('p',{class:'wg-empty'}, 'Aucune erreur enregistrée.'));
     d.mots.forEach(function(m){
