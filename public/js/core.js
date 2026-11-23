@@ -457,6 +457,14 @@ function retryPending(list, btn){
     renderHome();
   }).catch(function(e){ toast(e.message); btn.removeAttribute('disabled'); btn.textContent = 'Relancer'; });
 }
+// Jours restants avant la dictee (null si pas de date ou date passee).
+function daysUntil(due){
+  if(!due) return null;
+  var p = due.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]), t = new Date();
+  t = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  var n = Math.round((d - t) / 86400000);
+  return n >= 0 ? n : null;
+}
 function renderHome(){
   var box = $('#listsContainer');
   box.innerHTML = '';
@@ -476,6 +484,11 @@ function renderHome(){
     var bar = el('div',{class:'mastery-bar'}); var span = el('span',{style:'width:'+pct+'%'}); bar.appendChild(span);
     meta.appendChild(bar);
     info.appendChild(meta);
+    var dleft = daysUntil(list.due);
+    if(dleft !== null){
+      var rest = total - mastered;
+      info.appendChild(el('div',{class:'meta countdown'}, escapeHtml('Dictée ' + (dleft === 0 ? "aujourd'hui" : (dleft === 1 ? 'demain' : 'dans ' + dleft + ' jours')) + ' · ' + rest + ' mot' + (rest > 1 ? 's' : '') + ' à revoir')));
+    }
     if(list.pending && list.pending.length){
       var pend = el('div',{class:'meta', style:'color:var(--red)'}, escapeHtml(list.pending.length+' déclinaison'+(list.pending.length>1?'s':'')+' en attente de l’IA '));
       var retry = el('button',{type:'button', class:'btn btn-secondary'}, 'Relancer');

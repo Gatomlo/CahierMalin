@@ -53,11 +53,13 @@ function openEditor(listId){
     var list = getList(listId);
     $('#editorEyebrow').textContent = 'Modifier la liste';
     $('#listName').value = list.name;
+    $('#listDue').value = list.due || '';
     $('#listWords').value = listToText(list);
     $('#btnDeleteList').style.display = 'inline-flex';
   } else {
     $('#editorEyebrow').textContent = 'Nouvelle liste';
     $('#listName').value = '';
+    $('#listDue').value = '';
     $('#listWords').value = '';
     $('#btnDeleteList').style.display = 'none';
   }
@@ -130,9 +132,11 @@ $('#editorForm').addEventListener('submit', function(ev){
     if(editingListId){
       var list = getList(editingListId);
       list.name = name; list.words = words;
+      if($('#listDue').value) list.due = $('#listDue').value; else delete list.due;
       if(words.skipped.length) list.pending = words.skipped; else delete list.pending;
     } else {
       var nl = { id: 'list_'+Date.now(), name: name, words: words };
+      if($('#listDue').value) nl.due = $('#listDue').value;
       if(words.skipped.length) nl.pending = words.skipped;
       state.lists.push(nl);
     }

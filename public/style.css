@@ -571,3 +571,7 @@
 
 /* ---------- choix des mots a decliner ---------- */
 .decl-pick-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:4px 10px; max-height:220px; overflow:auto; margin:6px 0 10px; }
+
+.countdown{ font-weight:600; margin-top:4px; }
+
+.week-summary{ background:rgba(127,127,127,.12); border-radius:10px; padding:10px 12px; margin:8px 0 12px; line-height:1.5; }

@@ -362,6 +362,13 @@ function renderSuivi(p){
       box.appendChild(card); box.scrollIntoView({ behavior:'smooth' });
       return;
     }
+    var wk = d.semaine || { n:0, ok:0, jours:0 };
+    var due = (d.listes || []).filter(function(l){ return daysUntil(l.due) !== null; }).sort(function(a, b){ return a.due < b.due ? -1 : 1; })[0];
+    var sum = el('div',{class:'week-summary'});
+    var dd = due ? daysUntil(due.due) : null, left = due ? due.mots - due.acquis : 0;
+    sum.innerHTML = '<strong>Cette semaine</strong> : ' + wk.jours + ' jour' + (wk.jours>1?'s':'') + ' d’entraînement sur 7, ' + wk.n + ' réponse' + (wk.n>1?'s':'') + (wk.n ? ', ' + pct(wk.ok, wk.n) + ' % de réussite' : '') + '.'
+      + (due ? ' Prochaine dictée (« ' + escapeHtml(due.name) + ' ») ' + (dd === 0 ? 'aujourd’hui' : 'dans ' + dd + ' jour' + (dd>1?'s':'')) + ' : ' + left + ' mot' + (left>1?'s':'') + ' pas encore acquis' + (d.mots.length ? ', dont ' + d.mots.slice(0, 5).map(function(m){ return escapeHtml(m.word); }).join(', ') + ' souvent ratés' : '') + '.' : '');
+    card.appendChild(sum);
     var last = d.total.last ? new Date(d.total.last).toLocaleDateString('fr-FR', { day:'numeric', month:'long' }) : '';
     card.appendChild(el('p',{class:'wg-empty'}, d.total.n + ' réponses sur 90 jours, ' + pct(d.total.ok, d.total.n) + ' % de réussite. Dernière séance : ' + escapeHtml(last) + '.'));
     var max = Math.max.apply(null, d.days.map(function(x){ return x.n; })) || 1;
