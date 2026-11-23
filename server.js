@@ -61,6 +61,7 @@ function checkState(b) {
   for (const l of b.lists) {
     if (!isObj(l) || typeof l.id !== 'string' || typeof l.name !== 'string' || !Array.isArray(l.words) || l.words.length > 500) return 'Liste invalide.';
     if (l.id.length > 60 || l.name.length > 120) return 'Liste invalide.';
+    if (l.pending !== undefined && (!Array.isArray(l.pending) || l.pending.length > 100 || l.pending.some((x) => typeof x !== 'string' || x.length > 200))) return 'Liste invalide.';
     for (const w of l.words) if (!isObj(w) || typeof w.w !== 'string' || w.w.length > 120 || (w.s !== undefined && typeof w.s !== 'string')) return 'Mot invalide.';
   }
   if (b.progress !== undefined && !isObj(b.progress)) return 'Progression invalide.';

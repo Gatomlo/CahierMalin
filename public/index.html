@@ -1261,6 +1261,19 @@
   }
 
   /* ---------------- rendering: HOME ---------------- */
+  // Relance les lignes de conjugaison restees en attente (IA indisponible a l'enregistrement).
+  function retryPending(list, btn){
+    btn.setAttribute('disabled','true'); btn.textContent = '...';
+    buildWords(list.pending, list).then(function(words){
+      var have = {};
+      list.words.forEach(function(w){ have[w.w.toLowerCase()] = true; });
+      words.forEach(function(w){ if(!have[w.w.toLowerCase()]) list.words.push(w); });
+      if(words.skipped.length) list.pending = words.skipped; else delete list.pending;
+      saveState();
+      toast(words.skipped.length ? 'L’IA ne répond toujours pas pour ' + words.skipped.length + ' ligne(s).' : 'Déclinaisons ajoutées à la liste !');
+      renderHome();
+    }).catch(function(e){ toast(e.message); btn.removeAttribute('disabled'); btn.textContent = 'Relancer'; });
+  }
   function renderHome(){
     var box = $('#listsContainer');
     box.innerHTML = '';
@@ -1280,6 +1293,13 @@
       var bar = el('div',{class:'mastery-bar'}); var span = el('span',{style:'width:'+pct+'%'}); bar.appendChild(span);
       meta.appendChild(bar);
       info.appendChild(meta);
+      if(list.pending && list.pending.length){
+        var pend = el('div',{class:'meta', style:'color:var(--red)'}, escapeHtml(list.pending.length+' déclinaison'+(list.pending.length>1?'s':'')+' en attente de l’IA '));
+        var retry = el('button',{type:'button', class:'btn btn-secondary'}, 'Relancer');
+        retry.addEventListener('click', function(){ retryPending(list, retry); });
+        pend.appendChild(retry);
+        info.appendChild(pend);
+      }
       card.appendChild(info);
       var actions = el('div',{class:'actions'});
       var studyBtn = el('button',{class:'icon-btn', title:'Étudier'}, '<svg viewBox="0 0 20 20" fill="none"><path d="M6 4l9 6-9 6V4z" fill="currentColor"/></svg>');
@@ -2474,6 +2494,7 @@
       lastG = null;
       out.push(w.s ? (w.w+' ; '+w.s) : w.w);
     });
+    (list.pending || []).forEach(function(l){ out.push(l); });
     return out.join('\n');
   }
   function updateWordCountHint(){
@@ -2519,23 +2540,42 @@
       if(!c) { var parts = line.split(';'); return { word:{ w: parts[0].trim(), s: parts[1] ? parts[1].trim() : '' } }; }
       var key = lineKey(line);
       if(known[key]) return { forms: known[key] };
-      jobs.push({ verbe:c.verbe, temps:c.temps, personnes:c.personnes, key:key });
+      jobs.push({ verbe:c.verbe, temps:c.temps, personnes:c.personnes, key:key, line:line });
       return { key:key };
     });
-    var ask = jobs.length ? apiFetch('api/conjugaison', { method:'POST', body: JSON.stringify({ verbes: jobs.map(function(j){ return { verbe:j.verbe, temps:j.temps, personnes:j.personnes }; }) }) }) : Promise.resolve({ verbes:[] });
-    return ask.then(function(r){
+    // lots de 12 verbes (limite du serveur) ; un lot en echec laisse ses lignes en attente
+    var ask = Promise.resolve({ verbes:[] });
+    if(jobs.length){
+      var all = new Array(jobs.length);
+      var chunks = [];
+      for(var ci = 0; ci < jobs.length; ci += 12) chunks.push(ci);
+      ask = chunks.reduce(function(chain, start){
+        return chain.then(function(){
+          var part = jobs.slice(start, start + 12);
+          return apiFetch('api/conjugaison', { method:'POST', body: JSON.stringify({ verbes: part.map(function(j){ return { verbe:j.verbe, temps:j.temps, personnes:j.personnes }; }) }) })
+            .then(function(r){ (r.verbes || []).forEach(function(v, k){ all[start + k] = v; }); })
+            .catch(function(){});
+        });
+      }, Promise.resolve()).then(function(){ return { verbes:all }; });
+    }
+    // si l'IA echoue, la liste s'enregistre quand meme (sans les lignes de conjugaison non resolues)
+    var skipped = [];
+    return ask.catch(function(){ return { verbes:[] }; }).then(function(r){
       var byKey = {};
       jobs.forEach(function(j, i){
-        byKey[j.key] = r.verbes[i].formes.map(function(f){ return { w:f.texte, s:f.phrase || '', g:j.key }; });
+        var v = r.verbes && r.verbes[i];
+        if(v && v.formes && v.formes.length) byKey[j.key] = v.formes.map(function(f){ return { w:f.texte, s:f.phrase || '', g:j.key }; });
+        else skipped.push(j.line);
       });
       var words = [], seen = {};
       plan.forEach(function(p){
-        (p.word ? [p.word] : (p.forms || byKey[p.key])).forEach(function(w){
+        (p.word ? [p.word] : (p.forms || byKey[p.key] || [])).forEach(function(w){
           var k = w.w.toLowerCase();
           if(seen[k]) return;
           seen[k] = true; words.push(w);
         });
       });
+      words.skipped = skipped;
       return words;
     });
   }
@@ -2548,17 +2588,20 @@
     submit.setAttribute('disabled','true');
     buildWords(raw, editingListId ? getList(editingListId) : null).then(function(words){
       if(words.length < MIN_LIST_WORDS){
-        toast('Il faut au moins ' + MIN_LIST_WORDS + ' mots (encore ' + (MIN_LIST_WORDS - words.length) + ' à ajouter).');
+        toast('Il faut au moins ' + MIN_LIST_WORDS + ' mots (encore ' + (MIN_LIST_WORDS - words.length) + ' à ajouter).' + (words.skipped.length ? ' L’IA n’a pas répondu pour ' + words.skipped.length + ' ligne(s) de conjugaison.' : ''));
         return;
       }
       if(editingListId){
         var list = getList(editingListId);
         list.name = name; list.words = words;
+        if(words.skipped.length) list.pending = words.skipped; else delete list.pending;
       } else {
-        state.lists.push({ id: 'list_'+Date.now(), name: name, words: words });
+        var nl = { id: 'list_'+Date.now(), name: name, words: words };
+        if(words.skipped.length) nl.pending = words.skipped;
+        state.lists.push(nl);
       }
       saveState();
-      toast('Liste enregistrée !');
+      toast(words.skipped.length ? 'Liste enregistrée. L’IA n’a pas répondu : ' + words.skipped.length + ' déclinaison(s) en attente (bouton « Relancer » sur la liste).' : 'Liste enregistrée !');
       renderHome();
       goto('home');
     }).catch(function(e){ toast(e.message); }).then(function(){ submit.removeAttribute('disabled'); });
@@ -2614,17 +2657,29 @@
     var status = $('#declStatus'), results = $('#declResults');
     results.innerHTML = '';
     if(!words.length){ status.textContent = "Écris d'abord quelques mots dans la liste."; return; }
-    if(words.length > 12){ status.textContent = '12 mots au maximum à la fois : garde seulement ceux à décliner.'; return; }
     var temps = Array.prototype.map.call(document.querySelectorAll('#declTemps input:checked'), function(i){ return i.getAttribute('data-temps'); });
     var options = { nombre:$('#declNombre').checked, genre:$('#declGenre').checked, conjugaison:$('#declConj').checked, temps:temps };
     if(!options.nombre && !options.genre && !options.conjugaison){ status.textContent = 'Coche au moins un type de forme.'; return; }
     if(options.conjugaison && !temps.length){ status.textContent = 'Coche au moins un temps.'; return; }
     var btn = $('#btnDecline'); btn.setAttribute('disabled','true');
-    status.textContent = 'Recherche en cours…';
-    apiFetch('api/declinaisons', { method:'POST', body: JSON.stringify({ mots:words, options:options }) }).then(function(d){
-      declData = d.mots;
-      renderDecl(d.source);
-    }).catch(function(e){ status.textContent = e.message; }).then(function(){ btn.removeAttribute('disabled'); });
+    // le serveur accepte 12 mots a la fois : envoi par lots, resultats cumules
+    var batches = [];
+    for(var i = 0; i < words.length; i += 12) batches.push(words.slice(i, i + 12));
+    declData = [];
+    var source = null, failure = null;
+    batches.reduce(function(chain, batch, bi){
+      return chain.then(function(){
+        if(failure) return;
+        status.textContent = 'Recherche en cours… (' + (bi + 1) + '/' + batches.length + ')';
+        return apiFetch('api/declinaisons', { method:'POST', body: JSON.stringify({ mots:batch, options:options }) }).then(function(d){
+          declData = declData.concat(d.mots);
+          source = source || d.source;
+        }).catch(function(e){ failure = e; });
+      });
+    }, Promise.resolve()).then(function(){
+      if(declData.length) renderDecl(source);
+      if(failure) status.textContent = failure.message + (declData.length ? ' Les mots suivants n’ont pas été traités : relance pour les compléter.' : '');
+    }).then(function(){ btn.removeAttribute('disabled'); });
   });
 
   function renderDecl(source){
