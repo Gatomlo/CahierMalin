@@ -68,6 +68,23 @@ $('#btnSounds').addEventListener('click', function(){
   updateSoundsBtn();
   playSound('ok');
 });
+/* Preferences d'affichage propres a l'appareil (accessibilite, concentration). */
+var SCALES = [['normal',''],['grand','text-l'],['très grand','text-xl']];
+function getPref(k, d){ try{ var v = localStorage.getItem('cahierMalin_' + k); return v === null ? d : v; }catch(e){ return d; } }
+function setPref(k, v){ try{ localStorage.setItem('cahierMalin_' + k, v); }catch(e){} }
+function applyPrefs(){
+  var focus = getPref('focus','0') === '1', dys = getPref('dys','0') === '1', sc = parseInt(getPref('scale','0'), 10) || 0;
+  document.body.classList.toggle('focus-mode', focus);
+  document.body.classList.toggle('dys', dys);
+  SCALES.forEach(function(s){ if(s[1]) document.body.classList.toggle(s[1], SCALES[sc] === s); });
+  $('#btnFocus').textContent = 'Concentration : ' + (focus ? 'oui' : 'non'); $('#btnFocus').setAttribute('aria-pressed', focus);
+  $('#btnDys').textContent = 'Police lisible : ' + (dys ? 'oui' : 'non'); $('#btnDys').setAttribute('aria-pressed', dys);
+  $('#btnScale').textContent = 'Texte : ' + SCALES[sc][0];
+}
+$('#btnFocus').addEventListener('click', function(){ setPref('focus', getPref('focus','0') === '1' ? '0' : '1'); applyPrefs(); });
+$('#btnDys').addEventListener('click', function(){ setPref('dys', getPref('dys','0') === '1' ? '0' : '1'); applyPrefs(); });
+$('#btnScale').addEventListener('click', function(){ setPref('scale', String(((parseInt(getPref('scale','0'), 10) || 0) + 1) % SCALES.length)); applyPrefs(); });
+applyPrefs();
 $('#btnParent').addEventListener('click', openParent);
 $('#btnParentFromProfiles').addEventListener('click', openParent);
 

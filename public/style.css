@@ -575,3 +575,11 @@
 .countdown{ font-weight:600; margin-top:4px; }
 
 .week-summary{ background:rgba(127,127,127,.12); border-radius:10px; padding:10px 12px; margin:8px 0 12px; line-height:1.5; }
+
+.today-hint{ margin:6px 0 12px; font-weight:600; }
+
+/* ---------- accessibilite et concentration (reglages de l'appareil) ---------- */
+body.dys, body.dys button, body.dys input, body.dys textarea{ font-family:'Lexend', 'Karla', sans-serif; letter-spacing:.03em; word-spacing:.08em; line-height:1.6; }
+body.text-l{ zoom:1.15; }
+body.text-xl{ zoom:1.3; }
+body.focus-mode .progress-cluster, body.focus-mode .page-head .lede, body.focus-mode .sub, body.focus-mode .today-hint, body.focus-mode .sync-badge, body.focus-mode .unlock-hint, body.focus-mode .words-panel{ display:none !important; }

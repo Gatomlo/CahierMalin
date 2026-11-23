@@ -457,6 +457,23 @@ function retryPending(list, btn){
     renderHome();
   }).catch(function(e){ toast(e.message); btn.removeAttribute('disabled'); btn.textContent = 'Relancer'; });
 }
+/* Serie quotidienne : jours consecutifs avec au moins une manche terminee (gardee dans settings). */
+function dayStr(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function streakInfo(){
+  var s = state.settings.streak || { last:'', count:0, best:0 };
+  var today = dayStr(new Date()), yest = dayStr(new Date(Date.now() - 86400000));
+  return { count: (s.last === today || s.last === yest) ? s.count : 0, doneToday: s.last === today, best: s.best || 0 };
+}
+function touchStreak(){
+  var s = state.settings.streak || { last:'', count:0, best:0 };
+  var today = dayStr(new Date()), yest = dayStr(new Date(Date.now() - 86400000));
+  if(s.last === today) return s.count;
+  s = { last: today, count: s.last === yest ? s.count + 1 : 1, best: s.best || 0 };
+  if(s.count > s.best) s.best = s.count;
+  state.settings.streak = s;
+  saveState();
+  return s.count;
+}
 // Jours restants avant la dictee (null si pas de date ou date passee).
 function daysUntil(due){
   if(!due) return null;
@@ -466,6 +483,13 @@ function daysUntil(due){
   return n >= 0 ? n : null;
 }
 function renderHome(){
+  var hint = $('#todayHint'), sk = streakInfo();
+  if(state.lists.length){
+    hint.hidden = false;
+    hint.textContent = sk.doneToday
+      ? 'Séance du jour faite' + (sk.count > 1 ? ' : ' + sk.count + ' jours de suite' : '') + ', bravo !'
+      : (sk.count ? 'Cinq minutes aujourd’hui pour garder ta série de ' + sk.count + ' jour' + (sk.count>1?'s':'') + ' !' : 'Cinq minutes par jour, c’est le meilleur entraînement.');
+  } else hint.hidden = true;
   var box = $('#listsContainer');
   box.innerHTML = '';
   if(state.lists.length === 0){
@@ -683,6 +707,7 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
 
 function recordAttempt(word, correct){
   var p = wordProgress(nav.listId, word);
+  var rescued = correct && p.lastWrong === true && nav.kind === 'learn';
   var wasAcquired = isAcquired(nav.listId, word);
   if(nav.kind === 'learn'){
     p.attempts++;
@@ -692,7 +717,7 @@ function recordAttempt(word, correct){
   if(correct){ state.stars++; }
   playSound(correct ? 'ok' : 'no');
   logEvent(word, correct);
-  nav.results.push({ word:word, correct:correct, acquired: !wasAcquired && isAcquired(nav.listId, word) });
+  nav.results.push({ word:word, correct:correct, rescued:rescued, acquired: !wasAcquired && isAcquired(nav.listId, word) });
   saveState();
   updateStarStamp();
 }
@@ -706,17 +731,19 @@ function finishRound(){
   var okCount = nav.results.filter(function(r){ return r.correct; }).length;
   var bonus = (okCount === nav.results.length && nav.results.length>0) ? 2 : 0;
   if(bonus){ state.stars += bonus; updateStarStamp(); saveState(); playSound('win'); }
-  $('#resultsTitle').textContent = okCount===nav.results.length ? 'Sans faute, bravo !' : 'Bien joué !';
+  var rescuedN = nav.results.filter(function(r){ return r.rescued; }).length;
+  $('#resultsTitle').textContent = rescuedN ? (rescuedN === 1 ? 'Un mot rattrapé, bravo !' : rescuedN + ' mots rattrapés, bravo !') : (okCount===nav.results.length ? 'Sans faute, bravo !' : 'Bien joué !');
+  var streakN = nav.kind === 'learn' ? touchStreak() : streakInfo().count;
   $('#resultsTally').textContent = '+' + (okCount+bonus) + ' étoile' + ((okCount+bonus)>1?'s':'');
   var list = $('#resultsList'); list.innerHTML = '';
   nav.results.forEach(function(r){
     var row = el('div',{class:'results-row '+(r.correct?'ok':'no')});
-    row.innerHTML = '<span class="w">'+escapeHtml(r.word)+'</span><span class="row-right">' + (r.acquired ? '<span class="tag-acq">acquis</span>' : '') + (r.correct ? ICON_CHECK : ICON_CROSS) + '</span>';
+    row.innerHTML = '<span class="w">'+escapeHtml(r.word)+'</span><span class="row-right">' + (r.rescued ? '<span class="tag-acq">rattrapé</span>' : '') + (r.acquired ? '<span class="tag-acq">acquis</span>' : '') + (r.correct ? ICON_CHECK : ICON_CROSS) + '</span>';
     list.appendChild(row);
   });
   var sc = scoreOfLists([getList(nav.listId)]);
   $('#resultsScore').textContent = nav.kind === 'learn'
-    ? 'Progression de la liste : ' + sc.pct + ' %'
+    ? 'Progression de la liste : ' + sc.pct + ' %' + (streakN > 1 ? ' · Série : ' + streakN + ' jours de suite' : '')
     : 'Manche de révision : ta progression n\'a pas changé (' + sc.pct + ' %).';
   var newGradeIdx = currentGradeIdx(nav.listId);
   var banner = $('#levelupBanner');
